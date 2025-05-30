@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36109.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindsAI_SignalFiltering_CSharp", "MindsAI_SignalFiltering_CSharp.csproj", "{2573791A-6099-496B-A8CB-6A28DB116A6C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2573791A-6099-496B-A8CB-6A28DB116A6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2573791A-6099-496B-A8CB-6A28DB116A6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2573791A-6099-496B-A8CB-6A28DB116A6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2573791A-6099-496B-A8CB-6A28DB116A6C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {41D7BD3D-D6D9-4F34-A039-83054608D076}
+	EndGlobalSection
+EndGlobal

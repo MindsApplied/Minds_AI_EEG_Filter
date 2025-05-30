@@ -1,0 +1,171 @@
+{
+  "version": 3,
+  "targets": {
+    "net8.0": {
+      "brainflow/5.16.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/brainflow.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/brainflow.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "brainflow/5.16.0": {
+      "sha512": "hnr1amyZwMx2V+VwNUAgEpv5UxupqJbv1oDy+Kq/qzuQitinUnS3Cc6co07IiMh8v/A3UugcwsOk1UpoFjDlnQ==",
+      "type": "package",
+      "path": "brainflow/5.16.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "brainflow.5.16.0.nupkg.sha512",
+        "brainflow.nuspec",
+        "lib/BoardController.dll",
+        "lib/BoardController32.dll",
+        "lib/BrainBitLib.dll",
+        "lib/BrainBitLib32.dll",
+        "lib/BrainFlowBluetooth.dll",
+        "lib/BrainFlowBluetooth32.dll",
+        "lib/DataHandler.dll",
+        "lib/DataHandler32.dll",
+        "lib/GanglionLib.dll",
+        "lib/GanglionLib32.dll",
+        "lib/MLModule.dll",
+        "lib/MLModule32.dll",
+        "lib/MuseLib.dll",
+        "lib/MuseLib32.dll",
+        "lib/Unicorn.dll",
+        "lib/cmake/GTest/GTestConfig.cmake",
+        "lib/cmake/GTest/GTestConfigVersion.cmake",
+        "lib/cmake/GTest/GTestTargets-release.cmake",
+        "lib/cmake/GTest/GTestTargets.cmake",
+        "lib/cmake/brainflow/brainflowConfig.cmake",
+        "lib/cmake/brainflow/brainflowConfigVersion.cmake",
+        "lib/cmake/brainflow/brainflowTargets-release.cmake",
+        "lib/cmake/brainflow/brainflowTargets.cmake",
+        "lib/eego-SDK.dll",
+        "lib/eego-SDK32.dll",
+        "lib/gForceSDKWrapper.dll",
+        "lib/gForceSDKWrapper32.dll",
+        "lib/gforce32.dll",
+        "lib/gforce64.dll",
+        "lib/libBoardController.dylib",
+        "lib/libBoardController.so",
+        "lib/libBrainBitLib.dylib",
+        "lib/libBrainBitLib.so",
+        "lib/libBrainFlowBluetooth.dylib",
+        "lib/libBrainFlowBluetooth.so",
+        "lib/libDataHandler.dylib",
+        "lib/libDataHandler.so",
+        "lib/libGanglionLib.dylib",
+        "lib/libGanglionLib.so",
+        "lib/libMLModule.dylib",
+        "lib/libMLModule.so",
+        "lib/libMuseLib.dylib",
+        "lib/libMuseLib.so",
+        "lib/libeego-SDK.so",
+        "lib/libneurosdk-shared.dylib",
+        "lib/libonnxruntime_x64.dylib",
+        "lib/libonnxruntime_x64.so",
+        "lib/libsimpleble-c.dylib",
+        "lib/libsimpleble-c.so",
+        "lib/libunicorn.so",
+        "lib/libunicorn_raspberry.so",
+        "lib/netstandard2.0/brainflow.dll",
+        "lib/neurosdk-x64.dll",
+        "lib/neurosdk-x86.dll",
+        "lib/onnxruntime_x64.dll",
+        "lib/onnxruntime_x86.dll",
+        "lib/pkgconfig/gmock.pc",
+        "lib/pkgconfig/gmock_main.pc",
+        "lib/pkgconfig/gtest.pc",
+        "lib/pkgconfig/gtest_main.pc",
+        "lib/simpleble-c.dll",
+        "lib/simpleble-c32.dll"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net8.0": [
+      "brainflow >= 5.16.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\wesie\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "E:\\MindsApplied\\Software\\MindsAI\\MindsAI_SignalFiltering_Examples\\csharp\\MindsAI_SignalFiltering_CSharp.csproj",
+      "projectName": "MindsAI_SignalFiltering_CSharp",
+      "projectPath": "E:\\MindsApplied\\Software\\MindsAI\\MindsAI_SignalFiltering_Examples\\csharp\\MindsAI_SignalFiltering_CSharp.csproj",
+      "packagesPath": "C:\\Users\\wesie\\.nuget\\packages\\",
+      "outputPath": "E:\\MindsApplied\\Software\\MindsAI\\MindsAI_SignalFiltering_Examples\\csharp\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\wesie\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.300"
+    },
+    "frameworks": {
+      "net8.0": {
+        "targetAlias": "net8.0",
+        "dependencies": {
+          "brainflow": {
+            "target": "Package",
+            "version": "[5.16.0, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}
