@@ -9,7 +9,7 @@ v5.14.01
 
 Before calling any signal processing functions, you must initialize the provided MindsAI license like:
 
-``cpp
+```cpp
 InitializeMindsAILicense("YOUR-LICENSE-KEY");
 ```
 - This only needs to be called once prior to filtering, and should not be called continuously to prevent API request overload errors.
