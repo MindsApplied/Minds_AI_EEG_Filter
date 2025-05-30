@@ -20,3 +20,4 @@ csharp/**/obj/
 
 # Visual Studio folder settings
 .vscode/
+.vs/
