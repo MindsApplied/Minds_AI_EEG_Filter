@@ -3,7 +3,7 @@
 This project contains samples for referencing the `MindsAI.dll` which requires a license key that can be purchased at https://www.minds-applied.com/
 
 ## Version
-v5.14.01
+v1.0.1
 
 ## Calling Card
 
