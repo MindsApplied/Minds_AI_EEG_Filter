@@ -1,4 +1,4 @@
-# Your Mind sAI Signal Filter DLL
+# Your Minds AI Signal Filter DLL
 
 This project contains samples for referencing your `MindsAI.dll` which requires a license key that can be purchased at https://www.minds-applied.com/
 
