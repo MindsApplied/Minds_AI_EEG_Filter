@@ -46,7 +46,7 @@ DRIFT_THRESH_UV             = 5.0   # |mean| or |median| shift (μV)
 VARIANCE_SMOOTHING_THRESH   = 5.0   # % variance drop
 
 # Choose SNR variant for console interpretation
-SNR_METHOD = "amplitude_ratio"  # also: "variance_ratio" | "power_ratio"
+SNR_METHOD = "power_ratio"  # also: "amplitude_ratio" | "variance_ratio"
 ```
 
 ### 1.3 Sampling Rate & Board Selection (BrainFlow vs manual)
@@ -138,7 +138,7 @@ General definition (decibels):
 
 Choices for \( P_{\mathrm{signal}}, P_{\mathrm{noise}} \):
 
-**Power ratio** Reflects how much mean-square power 'energy' is in the signal vs noise. High amp artifacts will make the SNR worse.
+**Power ratio** - Reflects how much mean-square power 'energy' is in the signal vs noise. High amp artifacts will make the SNR worse.
 ```math
 \mathrm{SNR}_{\mathrm{dB}} = 10 \log_{10}\!\Big( \frac{\mathbb{E}[\,s^2\,]}{\mathbb{E}[\,n^2\,]} \Big)
 ```
