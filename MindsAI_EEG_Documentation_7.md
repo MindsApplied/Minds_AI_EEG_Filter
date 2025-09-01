@@ -138,19 +138,19 @@ General definition (decibels):
 
 Choices for \( P_{\mathrm{signal}}, P_{\mathrm{noise}} \):
 
-**Variance ratio**
-```math
-\mathrm{SNR}_{\mathrm{dB}} = 10 \log_{10}\!\Big( \frac{\mathrm{Var}(s)}{\mathrm{Var}(n)} \Big)
-```
-
-**Power ratio**
+**Power ratio** Reflects how much mean-square power 'energy' is in the signal vs noise. High amp artifacts will make the SNR worse.
 ```math
 \mathrm{SNR}_{\mathrm{dB}} = 10 \log_{10}\!\Big( \frac{\mathbb{E}[\,s^2\,]}{\mathbb{E}[\,n^2\,]} \Big)
 ```
 
-**Amplitude ratio**
+**Amplitude ratio** - Contrasts absolute amplitude of the signal and noise. Less spike sensitive than power but more affected by baseline magnitude.
 ```math
 \mathrm{SNR}_{\mathrm{dB}} = 20 \log_{10}\!\Big( \frac{\mathbb{E}[\,|s|\,]}{\mathbb{E}[\,|n|\,]} \Big)
+```
+
+**Variance ratio** - Compares the spread of the filtered signal to the residual noise (how much it wiggles around its average). Ignores DC powerline offset but sensitive to big spikes.
+```math
+\mathrm{SNR}_{\mathrm{dB}} = 10 \log_{10}\!\Big( \frac{\mathrm{Var}(s)}{\mathrm{Var}(n)} \Big)
 ```
 
 Linearization and “signal power fraction” used in the console:
