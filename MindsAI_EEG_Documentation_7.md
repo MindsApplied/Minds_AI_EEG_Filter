@@ -40,12 +40,12 @@ BP_HIGH_HZ = 40.0
 BP_ORDER   = 4
 BP_TYPE    = FilterTypes.BUTTERWORTH  # (zero-phase alternative: FilterTypes.BUTTERWORTH_ZERO_PHASE)
 
-# Console “tag” thresholds (drive the inline labels)
+# Console “flag” thresholds 
 ARTIFACT_SUPPRESSION_THRESH = 20.0  # % peak drop
 DRIFT_THRESH_UV             = 5.0   # |mean| or |median| shift (μV)
 VARIANCE_SMOOTHING_THRESH   = 5.0   # % variance drop
 
-# Choose SNR variant for console interpretation
+# Console Signal to Noise ratio variants 
 SNR_METHOD = "power_ratio"  # also: "amplitude_ratio" | "variance_ratio"
 ```
 
