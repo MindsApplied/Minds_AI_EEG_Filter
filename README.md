@@ -1,4 +1,4 @@
-# MindsAI EEG Real‑Time Filtering & Metrics — Documentation (_7)
+# MindsAI EEG Real‑Time Filtering & Metrics — Documentation
 
 This document covers configuration, licensing, math (with GitHub‑rendered LaTeX), how configuration choices affect the signal and **console output**, and a pointer to the full script. It is designed for both quick testing and deeper inspection by signal analysts and neuro‑enthusiasts.
 
