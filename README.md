@@ -2,13 +2,13 @@
 
 *Your* Minds AI signal filter relies on sensor fusion to recognize the physics of true brain signal and, in turn, filter out artifacts and supress noise.
 
-The MAI Filter package and license can be downloaded from [minds-applied.com/minds-ai](minds-applied.com/minds-ai)
+The MAI Filter package and license can be downloaded from [minds-applied.com/minds-ai](minds-applied.com/minds-ai).
 
-[Empirical research comparing the filter and assessing its impact on artifacts and downstream tasks](minds-applied.com)
+[Empirical research comparing the filter and assessing its impact on artifacts and downstream tasks](minds-applied.com).
 
-[A demo of the filter and below application code can be found here](minds-applied.com)
+[A demo of the filter and below application can be found here](minds-applied.com).
 
-> **Heads‑up (real headsets):** turn all synthetic noise off — set `INJECT_* = False`.
+> **Heads‑up (real headsets):** turn all synthetic signal and noise off — set `USE_SYNTHETIC  = False` & `INJECT_* = False`.
 
 ---
 
@@ -23,6 +23,7 @@ print(mindsai_filter_python.get_mindsai_license_message())
 filtered_data = mindsai_filter_python.mindsai_python_filter(data, tailoring_lambda)
 ```
 It's that easy! The license message will return how long your key is active until. It currently requires initialization before every run, but we can provide an offline version as well, upon request. It expects data to be a 2-D continuous array of channels x time and relies on one hyperparameter. It can be applied to large trials or looped for real-time usage.
+
 The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI Filter modifies the original signal and should be input on a logarithmic scale between `0` and `0.1`. A lower `lambda` value like the default `1e-25` causes the filter to make bolder adjustments for more complex transformations that highlight the structure across `channels`, such as for real-time filtering (1 second windows). A higher `lambda` value like `1e-40` works best with more data (such as 60-second trials) for still helpful, but more conservative adjustments.
 
 ### 1.2 Core Config (edit at top of your script)
@@ -72,18 +73,18 @@ board_id       = BoardIds.SYNTHETIC_BOARD.value if USE_SYNTHETIC else BoardIds.C
 MANUAL_FS = 125
 fs = BoardShim.get_sampling_rate(board_id) if USE_BRAINFLOW else MANUAL_FS
 
-# Serial port only required for physical OpenBCI boards
+# Serial port only required for devices using an input port like usb
 if not USE_SYNTHETIC:
     params.serial_port = "COM3"
 
-# Unit scaling into the MindsAI filter (volts in, volts out)
+# Unit scaling required for boards streaming microvolts such as OpenBCI via brainflow. Not required for standalone filter.
 UNIT_SCALE_IN = 1e-6 if not USE_SYNTHETIC else 1.0  # μV→V for real boards; synthetic already V
 
 # Window size in samples
 window_size = fs * window_seconds
 ```
 
-### 1.4 EEG‑Only Averaging (exclude AUX/EMG/ACC)
+### 1.4 EEG‑Only Averaging
 ```python
 # raw_plot_uv, filtered_plot_uv: shape = (channels, timepoints) in microvolts
 eeg_ch = BoardShim.get_eeg_channels(board_id)  # BrainFlow’s EEG subset (indices into the board’s channel list)
@@ -134,10 +135,9 @@ x(t), & \text{otherwise}
 
 ---
 
-## 3) Mathematical Background (GitHub‑rendered)
+## 3) Mathematical Background
 
 > Notation: \( s \) = filtered signal, \( n = \text{raw} - \text{filtered} \) (removed noise).  
-> We avoid `\left`/`\right` pairs to keep GitHub’s renderer happy.
 
 ### 3.1 Signal‑to‑Noise Ratio (SNR)
 
@@ -226,25 +226,3 @@ A typical two‑line console block per window is:
 * Raise **thresholds** → fewer tags; lower thresholds → more sensitive.
 * Change **SNR_METHOD** → dB and “signal power” readouts may differ across methods.
 * Toggle **bandpass** → expect improved SNR/variance for typical EEG (1–40 Hz), at the cost of suppressing DC/ultra‑slow components.
-
----
-
-## 5) Full Script (Reference Pointer)
-
-Keep the full acquisition script in your repository (e.g., `DLL_Real-time_Analysis_Python.py`) and run it directly — avoid launching hardware from notebooks. The docs can import helper functions only.
-
-```python
-# Example (do not auto-run hardware in docs/notebooks)
-# from DLL_Real-time_Analysis_Python import main  # keep commented in docs
-```
-
----
-
-## 6) Practical Notes
-
-* **Real headset:** ensure all `INJECT_*` flags are `False`.
-* **Units:** convert μV→V before calling the MindsAI filter (`UNIT_SCALE_IN`), then convert back to μV for metrics/plots.
-* **EEG‑only averaging:** always slice with `BoardShim.get_eeg_channels(board_id)` to exclude non‑EEG inputs.
-* **Bandpass:** good default is 1–40 Hz, order 4; consider zero‑phase if you need phase neutrality.
-* **Detrend:** constant detrend per channel (in volts) pre‑filter removes DC offsets that skew metrics.
-* **Versioning:** save as `MindsAI_EEG_Documentation_7.md` in your repo.
