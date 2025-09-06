@@ -1,19 +1,26 @@
-# MindsAI EEG Real‑Time Filtering & Metrics — Documentation (_7)
+# MindsAI Filter for EEG Documentation
 
-This document covers configuration, licensing, math (with GitHub‑rendered LaTeX), how configuration choices affect the signal and **console output**, and a pointer to the full script. It is designed for both quick testing and deeper inspection by signal analysts and neuro‑enthusiasts.
+*Your* Minds AI signal filter relies on sensor fusion to recognize the physics of true brain signal and, in turn, filter out artifacts and supress noise.
+The MAI Filter package and license can be downloaded from [minds-applied.com/minds-ai](minds-applied.com/minds-ai)
+[Empirical research comparing the filter and assessing its impact on artifacts and downstream tasks](minds-applied.com)
+[A demo of the filter and below application code can be found here](minds-applied.com)
 
 > **Heads‑up (real headsets):** turn all synthetic noise off — set `INJECT_* = False`.
 
 ---
 
-## 1) Quick‑Start / README‑Style Config
+## 1) README
 
-### 1.1 License (required)
+### 1.1 License and lambda (required)
+After adding the mindsai_filter_python file to your project, and ensuring version compatibility, it can be called using the following:
 ```python
 import mindsai_filter_python
 mindsai_filter_python.initialize_mindsai_license('YOUR-LICENSE-KEY')
 print(mindsai_filter_python.get_mindsai_license_message())
+filtered_data = mindsai_filter_python.mindsai_python_filter(data, tailoring_lambda)
 ```
+It's that easy! The license message will return how long your key is active until. It currently requires initialization before every run, but we can provide an offline version as well, upon request. It expects data to be a 2-D continuous array of channels x time and relies on one hyperparameter. It can be applied to large trials or looped for real-time usage.
+The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI Filter modifies the original signal and should be input on a logarithmic scale between `0` and `0.1`. A lower `lambda` value like the default `1e-25` causes the filter to make bolder adjustments for more complex transformations that highlight the structure across `channels`, such as for real-time filtering (1 second windows). A higher `lambda` value like `1e-40` works best with more data (such as 60-second trials) for still helpful, but more conservative adjustments.
 
 ### 1.2 Core Config (edit at top of your script)
 ```python
