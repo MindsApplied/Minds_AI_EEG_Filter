@@ -1,6 +1,6 @@
 # MindsAI Filter for EEG Documentation
 
-*Your* Minds AI signal filter relies on sensor fusion to recognize the physics of true brain signal and, in turn, filter out artifacts and supress noise.
+*Your* Minds AI Signal Filter relies on sensor fusion to recognize the physics of true brain signal and, in turn, filter out artifacts and supress noise.
 
 The MAI Filter package and license can be downloaded from [minds-applied.com/minds-ai](minds-applied.com/minds-ai).
 
