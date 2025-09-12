@@ -12,7 +12,7 @@ The MAI Filter package and license can be downloaded from [minds-applied.com/min
 
 ## 1) README
 
-### 1.1 License and lambda (required)
+### 1.1 Filter Package Requirements: License and Lambda 
 After adding the mindsai_filter_python file to your project, and ensuring version compatibility, it can be called using the following:
 ```python
 import mindsai_filter_python
