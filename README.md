@@ -7,6 +7,7 @@ The MAI Filter package and license can be downloaded from [minds-applied.com/min
 [Empirical research comparing the filter and assessing its impact on artifacts and downstream tasks](minds-applied.com/research).
 
 [A demo of the filter and below application can be found here](https://www.youtube.com/watch?v=YgEt1vKYDc4).
+
 ---
 
 ## 1) README
