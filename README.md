@@ -4,9 +4,9 @@
 
 The MAI Filter package and license can be downloaded from [minds-applied.com/minds-ai](minds-applied.com/minds-ai).
 
-[Empirical research comparing the filter and assessing its impact on artifacts and downstream tasks](minds-applied.com).
+[Empirical research comparing the filter and assessing its impact on artifacts and downstream tasks](minds-applied.com/research).
 
-[A demo of the filter and below application can be found here](minds-applied.com).
+[A demo of the filter and below application can be found here](https://www.youtube.com/watch?v=YgEt1vKYDc4).
 
 > **Heads‑up (real headsets):** turn all synthetic signal and noise off — set `USE_SYNTHETIC  = False` & `INJECT_* = False`.
 
@@ -22,11 +22,11 @@ mindsai_filter_python.initialize_mindsai_license('YOUR-LICENSE-KEY')
 print(mindsai_filter_python.get_mindsai_license_message())
 filtered_data = mindsai_filter_python.mindsai_python_filter(data, tailoring_lambda)
 ```
-It's that easy! The license message will return how long your key is active until. It currently requires initialization before every run, but we can provide an offline version as well, upon request. It expects data to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to any indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage. 
+It's that easy! The license message will return how long your key is active until. It currently requires initialization before every run, but we can provide an offline version as well, upon request. It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage. 
 
 The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI Filter modifies the original signal and should be input on a logarithmic scale between `0` and `0.1`. A lower `lambda` value like the default `1e-25` causes the filter to make bolder adjustments for more complex transformations that highlight the structure across `channels`, such as for real-time filtering (1 second windows). A higher `lambda` value like `1e-40` works best with more data (such as 60-second trials) for still helpful, but more conservative adjustments.
 
-### 1.2 Core Optional Configurations
+### 1.2 Test App Optional Configurations
 ```python
 # Filter strength (regularization). Lower = stronger denoising (risk over‑smooth).
 filterHyperparameter = 1e-25   # aka λ (lambda)
