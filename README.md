@@ -10,9 +10,9 @@ The MAI Filter package and license can be downloaded from [minds-applied.com/min
 
 ---
 
-## 1) README
+## 1) Filter Package Requirements
 
-### 1.1 Filter Package Requirements: License and Lambda 
+### 1.1 License and Data Input
 After adding the mindsai_filter_python file to your project, and ensuring version compatibility, it can be called using the following:
 ```python
 import mindsai_filter_python
@@ -20,11 +20,17 @@ mindsai_filter_python.initialize_mindsai_license('YOUR-LICENSE-KEY')
 print(mindsai_filter_python.get_mindsai_license_message())
 filtered_data = mindsai_filter_python.mindsai_python_filter(data, tailoring_lambda)
 ```
-It's that easy! The license message will return how long your key is active until. It currently requires initialization before every run, but we can provide an offline version as well, upon request. It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage. 
+It's that easy! The license message will return how long your key is active until. It currently requires initialization before every run, but we can provide an offline version as well, upon request. It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage.
+
+### 1.1 Tightening Lambda  
 
 The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI Filter modifies the original signal and should be input on a logarithmic scale between `0` and `0.1`. A lower `lambda` value like the default `1e-25` causes the filter to make bolder adjustments for more complex transformations that highlight the structure across `channels`, such as for real-time filtering (1 second windows). A higher `lambda` value like `1e-40` works best with more data (such as 60-second trials) for still helpful, but more conservative adjustments.
 
-### 1.2 Test App Optional Configurations
+---
+
+## 2) Test App Documentation
+
+### 2.1 Optional Configurations
 ```python
 # Filter strength (regularization). Lower = stronger denoising (risk over‑smooth).
 filterHyperparameter = 1e-25   # aka λ (lambda)
@@ -58,7 +64,7 @@ VARIANCE_SMOOTHING_THRESH   = 5.0   # % variance drop
 SNR_METHOD = "power_ratio"  # also: "amplitude_ratio" | "variance_ratio"
 ```
 
-### 1.3 Sampling Rate & Board Selection (BrainFlow vs manual)
+### 12.2 Sampling Rate & Board Selection (BrainFlow vs manual)
 ```python
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
 
@@ -82,7 +88,7 @@ UNIT_SCALE_IN = 1e-6 if not USE_SYNTHETIC else 1.0  # μV→V for real boards; s
 window_size = fs * window_seconds
 ```
 
-### 1.4 EEG‑Only Averaging
+### 2.3 EEG‑Only Averaging
 ```python
 # raw_plot_uv, filtered_plot_uv: shape = (channels, timepoints) in microvolts
 eeg_ch = BoardShim.get_eeg_channels(board_id)  # BrainFlow’s EEG subset (indices into the board’s channel list)
@@ -98,7 +104,7 @@ avg_filt = filtered_plot_uv[eeg_ch, :].mean(axis=0)
 
 ---
 
-## 2) Noise Models Used in the Demo (for synthetic tests)
+## 3) Noise Models Used in the Demo (for synthetic tests)
 
 We optionally inject simple, interpretable noise terms to stress‑test the filter. Let \(x(t)\) be the clean input and \(y(t)\) the observed (noisy) signal.
 
@@ -133,11 +139,11 @@ x(t), & \text{otherwise}
 
 ---
 
-## 3) Mathematical Background
+## 4) Mathematical Background
 
 > Notation: \( s \) = filtered signal, \( n = \text{raw} - \text{filtered} \) (removed noise).  
 
-### 3.1 Signal‑to‑Noise Ratio (SNR)
+### 4.1 Signal‑to‑Noise Ratio (SNR)
 
 General definition (decibels):
 ```math
@@ -168,26 +174,26 @@ Linearization and “signal power fraction” used in the console:
 \text{Signal Fraction} = \frac{\mathrm{SNR}_{\mathrm{lin}}}{1 + \mathrm{SNR}_{\mathrm{lin}}}
 ```
 
-### 3.2 Artifact Suppression (peak drop)
+### 4.2 Artifact Suppression (peak drop)
 ```math
 \Delta_{\text{peak}} = \max_t |x_{\text{raw}}(t)| - \max_t |x_{\text{filt}}(t)|,
 \qquad
 \%\Delta_{\text{peak}} = 100 \frac{\Delta_{\text{peak}}}{\max_t |x_{\text{raw}}(t)|}
 ```
 
-### 3.3 Baseline Drift (mean/median)
+### 4.3 Baseline Drift (mean/median)
 ```math
 \Delta_{\mu} = \mu_{\text{filt}} - \mu_{\text{raw}},
 \qquad
 \Delta_{\mathrm{med}} = \mathrm{med}_{\text{filt}} - \mathrm{med}_{\text{raw}}
 ```
 
-### 3.4 Variance Smoothing
+### 4.4 Variance Smoothing
 ```math
 \%\Delta\sigma^2 = 100 \frac{\sigma^2_{\text{raw}} - \sigma^2_{\text{filt}}}{\sigma^2_{\text{raw}}}
 ```
 
-### 3.5 Multi‑Channel vs Single‑Channel
+### 4.5 Multi‑Channel vs Single‑Channel
 For a window with \( C \) EEG channels and \( T \) time samples, arrays are shape \( (C \times T) \).
 
 * **Single‑channel** metrics operate on one channel \( x \in \mathbb{R}^T \).
@@ -199,7 +205,7 @@ where \( S \) is the EEG‑only index set (e.g., BrainFlow `BoardShim.get_eeg_ch
 
 ---
 
-## 4) Console Output: What Each Field Means
+## 5) Console Output: What Each Field Means
 
 A typical two‑line console block per window is:
 
