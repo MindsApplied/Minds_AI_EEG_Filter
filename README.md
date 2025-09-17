@@ -2,7 +2,7 @@
 
 *Your* Minds AI Signal Filter relies on sensor fusion to recognize the physics of true brain signal and, in turn, filter out artifacts and supress noise.
 
-The MAI Filter package and license can be downloaded from [minds-applied.com/minds-ai](https://www.minds-applied.com/minds-ai).
+The MAI Filter package and key can be downloaded from [minds-applied.com/minds-ai](https://www.minds-applied.com/minds-ai).
 
 [Empirical research comparing the filter and assessing its impact on artifacts and downstream tasks](https://www.minds-applied.com/research).
 
@@ -12,7 +12,7 @@ The MAI Filter package and license can be downloaded from [minds-applied.com/min
 
 ## 1) Filter Package Requirements
 
-### 1.1 License and Data Input
+### 1.1 Initialization and Data Stream
 After adding the mindsai_filter_python file to your project, and ensuring version compatibility, it can be called using the following:
 ```python
 import mindsai_filter_python
@@ -20,7 +20,7 @@ mindsai_filter_python.initialize_mindsai_license('YOUR-LICENSE-KEY')
 print(mindsai_filter_python.get_mindsai_license_message())
 filtered_data = mindsai_filter_python.mindsai_python_filter(data, tailoring_lambda)
 ```
-It's that easy! The license message will return how long your key is active until. It currently requires initialization before every run, but we can provide an offline version as well, upon request. It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage.
+It's that easy! The license message will return how long your key is active until. It currently requires initialization before every run, and the the free version requires internet. [Contact MindsApplied](https://www.minds-applied.com/contact) for offline and commercial usage. It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage.
 
 ### 1.2 Tightening Lambda  
 
