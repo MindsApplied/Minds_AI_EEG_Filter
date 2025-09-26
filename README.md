@@ -32,7 +32,7 @@ The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI 
 
 ---
 
-## 2) Test App Documentation
+## 2) Test App Documentation (Not required for filter usage)
 
 ### 2.1 Optional Configurations
 ```python
