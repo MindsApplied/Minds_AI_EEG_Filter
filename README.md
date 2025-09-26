@@ -15,12 +15,16 @@ The MAI Filter package and key can be downloaded from [minds-applied.com/minds-a
 ### 1.1 Initialization and Data Stream
 After adding the mindsai_filter_python file to your project, and ensuring version compatibility, it can be called using the following:
 ```python
-import mindsai_filter_python
-mindsai_filter_python.initialize_mindsai_license('YOUR-LICENSE-KEY')
-print(mindsai_filter_python.get_mindsai_license_message())
-filtered_data = mindsai_filter_python.mindsai_python_filter(data, tailoring_lambda)
+import mindsai_filter_python as mai
+# data: (channels x timepoints) array
+data = [
+    [5, 6, 5, 4, 3, 2, 3, 4],     # ch0
+    [-2, -1, 0, 1, 0, -1, -2, -1] # ch1
+]
+tailoring_lambda = 1e-25
+filtered_data = mai.mindsai_python_filter(data, tailoring_lambda)
 ```
-It's that easy! The license message will return how long your key is active until. It currently requires initialization before every run, and the the free version requires internet. [Contact MindsApplied](https://www.minds-applied.com/contact) for offline and commercial usage. It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage.
+It's that easy! An intialization key is no longer required. [Contact MindsApplied](https://www.minds-applied.com/contact) for commercial usage. It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage.
 
 ### 1.2 Tightening Lambda  
 
