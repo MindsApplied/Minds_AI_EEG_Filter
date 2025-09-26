@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mindsai-filter-python"
+version = "1.1.0"
+description = "Minds AI signal filter package for real-time and offline EEG (Python)"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "MindsApplied" }]
+license = { file = "LICENSE" }
+
+dependencies = [
+  "numpy>=1.24",
+  "scipy>=1.10",         # hilbert
+  "scikit-learn>=1.2",   # BaseEstimator, TransformerMixin, fit_transform
+]
+
+[project.optional-dependencies]
+examples = [
+  "matplotlib>=3.7",
+  "brainflow",          
+]
+
+[project.urls]
+Homepage = "https://github.com/MindsApplied/MindsAI_SignalFiltering_Examples"
