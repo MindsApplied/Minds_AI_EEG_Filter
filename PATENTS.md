@@ -82,7 +82,7 @@ If you use this software, please cite the preprint:
 Wesierski, J-M., Rodriguez, N. A lightweight, physics-based, sensor-fusion filter for real-time EEG. bioRxiv (2025).
 https://doi.org/10.1101/2025.09.24.675953
 
-A machine-readable citation file is provided: CITATION.cff.
+A machine-readable citation file is provided: [CITATION](CITATION.cff).
 
 ---
 
