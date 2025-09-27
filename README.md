@@ -79,7 +79,7 @@ VARIANCE_SMOOTHING_THRESH   = 5.0   # % variance drop
 SNR_METHOD = "power_ratio"  # also: "amplitude_ratio" | "variance_ratio"
 ```
 
-### 12.2 Sampling Rate & Board Selection (BrainFlow vs manual)
+### 2.2 Sampling Rate & Board Selection (BrainFlow vs manual)
 ```python
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
 
