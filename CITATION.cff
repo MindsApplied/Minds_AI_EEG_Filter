@@ -2,15 +2,15 @@ cff-version: 1.2.0
 message: "If you use this software, please cite the preprint below."
 title: "MindsAI Signal Filter (Python)"
 type: software
-abstract: "Physics-informed, synchrony-aware filtering for multichannel EEG; real-time and offline use."
-repository-code: "https://github.com/MindsApplied/MindsAI_SignalFiltering_Examples"
-url: "https://github.com/MindsApplied/MindsAI_SignalFiltering_Examples"
+abstract: "We present the Minds AI Filter: a lightweight, physics-based, sensor-fusion method that exploits multichannel spatial structure and band-aware synchrony to enhance neural activity while suppressing non-neural noise"
+repository-code: "https://github.com/MindsApplied/Minds_AI_EEG_Filter"
+url: "https://github.com/MindsApplied/Minds_AI_EEG_Filter"
 authors:
   - family-names: Wesierski
     given-names: Jack-Michael
     affiliation: MindsApplied Incorporated
   - family-names: Rodriguez
-    given-names: N.
+    given-names: Nicholas
     affiliation: MindsApplied Incorporated
 keywords:
   - EEG
@@ -21,12 +21,12 @@ keywords:
 license: "Polyform Noncommercial 1.0.0"
 preferred-citation:
   type: article
-  title: "A lightweight, physics-based, sensor-fusion filter for real-time EEG"
+  title: "A lightweight, physics-based, sensor-fusion filter for real-time EEG denoising and improved downstream AI classification"
   authors:
     - family-names: Wesierski
       given-names: Jack-Michael
     - family-names: Rodriguez
-      given-names: N.
+      given-names: Nicholas.
   year: 2025
   journal: bioRxiv
   doi: "10.1101/2025.09.24.675953"
