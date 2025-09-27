@@ -1,7 +1,7 @@
 # Minds AI Filter for EEG Documentation
 
 *Your* Minds AI Signal Filter relies on sensor fusion to recognize the physics of true brain signal and, in turn, filter out artifacts and supress noise.
-- License: Polyform Noncommercial 1.0.0 — commercial use prohibited. See [LICENSE](LICENSE).
+- License: Polyform Noncommercial 1.0.0 — [Contact MindsApplied](https://www.minds-applied.com/contact) for commercial usage. See [LICENSE](LICENSE).
 - Patent status: **Patent pending** (US provisional filed 2025-06-30). See [PATENTS.md](PATENTS.md).
 - Cite this software: see [CITATION.cff](CITATION.cff) and the preprint below.
 - Preprint: https://doi.org/10.1101/2025.09.24.675953
@@ -23,7 +23,7 @@ data = [
 tailoring_lambda = 1e-25
 filtered_data = mai.mindsai_python_filter(data, tailoring_lambda)
 ```
-It's that easy! An intialization key is no longer required. [Contact MindsApplied](https://www.minds-applied.com/contact) for commercial usage. It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage.
+It's that easy! An intialization key is no longer required.  It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage.
 
 ### 1.2 Tightening Lambda  
 
