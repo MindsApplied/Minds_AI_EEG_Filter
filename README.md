@@ -1,12 +1,11 @@
 # Minds AI Filter for EEG Documentation
 
 *Your* Minds AI Signal Filter relies on sensor fusion to recognize the physics of true brain signal and, in turn, filter out artifacts and supress noise.
-
-The MAI Filter package and key can be downloaded from [minds-applied.com/minds-ai](https://www.minds-applied.com/minds-ai).
-
-[Empirical research comparing the filter and assessing its impact on artifacts and downstream tasks](https://www.minds-applied.com/research).
-
-[A demo of the filter and below application can be found here](https://www.youtube.com/watch?v=YgEt1vKYDc4).
+- License: Polyform Noncommercial 1.0.0 — commercial use prohibited. See [LICENSE](LICENSE).
+- Patent status: **Patent pending** (US provisional filed 2025-06-30). See [PATENTS.md](PATENTS.md).
+- Cite this software: see [CITATION.cff](CITATION.cff) and the preprint below.
+- Preprint: https://doi.org/10.1101/2025.09.24.675953
+- [Live demo of the filter and below application](https://www.youtube.com/watch?v=YgEt1vKYDc4).
 
 ---
 
@@ -236,3 +235,18 @@ A typical two‑line console block per window is:
 * Raise **thresholds** → fewer tags; lower thresholds → more sensitive.
 * Change **SNR_METHOD** → dB and “signal power” readouts may differ across methods.
 * Toggle **bandpass** → expect improved SNR/variance for typical EEG (1–40 Hz), at the cost of suppressing DC/ultra‑slow components.
+
+## Patent Status
+
+**Patent pending.** Portions of this work are covered by a US provisional application filed **2025-06-30**.  
+For details, see [PATENTS.md](PATENTS.md). For commercial licensing, contact contact@minds-applied.com.
+
+## How to Cite
+
+If you use this software, please cite the preprint:
+
+> Wesierski, J-M., Rodriguez, N. *A lightweight, physics-based, sensor-fusion filter for real-time EEG.* bioRxiv (2025).  
+> https://doi.org/10.1101/2025.09.24.675953
+
+A machine-readable citation file is provided: [CITATION.cff](CITATION.cff).
+
