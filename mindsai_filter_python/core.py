@@ -1,6 +1,6 @@
 # © 2023–2025 MindsApplied Incorporated — Patent pending (US provisional filed 2025-06-30)
 # Licensed under the Polyform Noncommercial License 1.0.0.
-# Commercial use is not permitted unless approved in writing. See LICENSE and PATENTS.md. Contact: contact@minds-applied.com
+# Commercial use is not permitted and requires a seperate license. See LICENSE and PATENTS.md. Contact: contact@minds-applied.com
 
 import numpy as np
 from scipy.signal import hilbert
@@ -49,4 +49,5 @@ class MindsAIFilter(BaseEstimator, TransformerMixin):
 
 def mindsai_python_filter(data: np.ndarray, lambda_val: float = 1e-25) -> np.ndarray:
     return MindsAIFilter(lambd=lambda_val).fit_transform(data)
+
 
