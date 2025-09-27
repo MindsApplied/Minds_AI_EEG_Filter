@@ -78,11 +78,11 @@ Please contact **contact@minds-applied.com** to discuss terms.
 
 ## 6) Citations / Acknowledgments
 
-If you use this software in academic work, please cite the preprint (when available).  
-A `CITATION.cff` file is included for GitHub’s “Cite this repo” feature.
+If you use this software, please cite the preprint:
+Wesierski, J-M., Rodriguez, N. A lightweight, physics-based, sensor-fusion filter for real-time EEG. bioRxiv (2025).
+https://doi.org/10.1101/2025.09.24.675953
 
-Suggested citation (placeholder):
-> Wesierski, J-M., Rodriguez, N., *MindsAI Signal Filter: Physics-informed sensor-fusion for real-time EEG*, preprint, 2025. DOI/URL: <link>.
+A machine-readable citation file is provided: CITATION.cff.
 
 ---
 
