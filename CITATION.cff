@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the preprint below."
+title: "MindsAI Signal Filter (Python)"
+type: software
+abstract: "Physics-informed, synchrony-aware filtering for multichannel EEG; real-time and offline use."
+repository-code: "https://github.com/MindsApplied/MindsAI_SignalFiltering_Examples"
+url: "https://github.com/MindsApplied/MindsAI_SignalFiltering_Examples"
+authors:
+  - family-names: Wesierski
+    given-names: Jack-Michael
+    affiliation: MindsApplied Incorporated
+  - family-names: Rodriguez
+    given-names: N.
+    affiliation: MindsApplied Incorporated
+keywords:
+  - EEG
+  - signal processing
+  - sensor fusion
+  - synchrony
+  - artifact suppression
+license: "Polyform Noncommercial 1.0.0"
+preferred-citation:
+  type: article
+  title: "A lightweight, physics-based, sensor-fusion filter for real-time EEG"
+  authors:
+    - family-names: Wesierski
+      given-names: Jack-Michael
+    - family-names: Rodriguez
+      given-names: N.
+  year: 2025
+  journal: bioRxiv
+  doi: "10.1101/2025.09.24.675953"
+  url: "https://doi.org/10.1101/2025.09.24.675953"
+  date-released: 2025-09-25
