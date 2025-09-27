@@ -1,4 +1,4 @@
-# MindsAI Filter for EEG Documentation
+# Minds AI Filter for EEG Documentation
 
 *Your* Minds AI Signal Filter relies on sensor fusion to recognize the physics of true brain signal and, in turn, filter out artifacts and supress noise.
 
@@ -27,6 +27,8 @@ filtered_data = mai.mindsai_python_filter(data, tailoring_lambda)
 It's that easy! An intialization key is no longer required. [Contact MindsApplied](https://www.minds-applied.com/contact) for commercial usage. It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage.
 
 ### 1.2 Tightening Lambda  
+
+![Tailoring Lambda Description Visual](images/MAI_Filter_Lambda_Funnel_labled.png)
 
 The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI Filter modifies the original signal and should be input on a logarithmic scale between `0` and `0.1`. A lower `lambda` value like the default `1e-25` causes the filter to make bolder adjustments for more complex transformations that highlight the structure across `channels`, such as for real-time filtering (1 second windows). A higher `lambda` value like `1e-40` works best with more data (such as 60-second trials) for still helpful, but more conservative adjustments.
 
