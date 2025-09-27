@@ -10,7 +10,6 @@
 ---
 
 ## 1) Filter Package Installation
-## Install
 
 **Package only**
 ```bash
