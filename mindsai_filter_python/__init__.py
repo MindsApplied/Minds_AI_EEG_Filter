@@ -1,6 +1,6 @@
-# © 2023–2025 MindsApplied Incorporated — Patent pending (US provisional filed 2025-06-30)
+# Â© 2023â€“2025 MindsApplied Incorporated â€” Patent pending (US provisional filed 2025-06-30)
 # Licensed under the Polyform Noncommercial License 1.0.0.
-# Commercial use is not permitted. See LICENSE and PATENTS.md. Contact: contact@minds-applied.com
+# Commercial use is not permitted unless approved in writing. See LICENSE and PATENTS.md. Contact: contact@minds-applied.com
 
 """
 MindsAI Signal Filter (Python)
@@ -19,3 +19,4 @@ __license__ = "Polyform Noncommercial 1.0.0"
 __contact__ = "contact@minds-applied.com"
 __patent_status__ = "Patent pending"
 __patent_filing_date__ = "2025-06-30"
+
