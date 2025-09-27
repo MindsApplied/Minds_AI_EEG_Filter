@@ -9,9 +9,19 @@
 
 ---
 
-## 1) Filter Package Requirements
+## 1) Filter Package Installation
+## Install
 
-### 1.1 Initialization and Data Stream
+**Package only**
+```bash
+pip install "git+https://github.com/MindsApplied/Minds_AI_EEG_Filter@main"
+```
+**Package and App**
+```bash
+pip install "git+https://github.com/MindsApplied/Minds_AI_EEG_Filter@main#subdirectory=.[examples]"
+```
+
+### 1.1 Implementation
 After adding the mindsai_filter_python file to your project, and ensuring version compatibility, it can be called using the following:
 ```python
 import mindsai_filter_python as mai
