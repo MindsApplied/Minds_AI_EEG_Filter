@@ -5,7 +5,7 @@
 **Contact:** contact@minds-applied.com  
 **License of this repo:** Polyform Noncommercial 1.0.0 (commercial use requires a separate license)
 
-> Required Notice: © 2023–2025 MindsApplied Incorporated (https://github.com/MindsApplied)
+> Required Notice: © 2023–2025 MindsApplied Incorporated (https://www.minds-applied.com/)
 
 ---
 
