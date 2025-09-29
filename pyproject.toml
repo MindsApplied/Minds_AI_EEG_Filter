@@ -9,13 +9,16 @@ description = "Minds AI physics-based signal filter package for real-time and of
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "MindsApplied" }]
-license = { file = "LICENSE" }
+license = { text = "PolyForm-Noncommercial-1.0.0" }
 
 dependencies = [
   "numpy>=1.24",
   "scipy>=1.10",         # hilbert
   "scikit-learn>=1.2",   # BaseEstimator, TransformerMixin, fit_transform
 ]
+
+[tool.setuptools]
+license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
 include = ["mindsai_filter_python*"]
@@ -29,4 +32,5 @@ examples = [
 
 [project.urls]
 Homepage = "https://github.com/MindsApplied/Minds_AI_EEG_Filter"
+
 
