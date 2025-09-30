@@ -12,7 +12,7 @@ authors = [{ name = "MindsApplied" }]
 license = { text = "PolyForm-Noncommercial-1.0.0" }
 
 dependencies = [
-  "numpy>=1.24",
+  "numpy>=1.24,<2.0",
   "scipy>=1.10",         # hilbert
   "scikit-learn>=1.2",   # BaseEstimator, TransformerMixin, fit_transform
 ]
