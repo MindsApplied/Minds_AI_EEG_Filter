@@ -18,7 +18,7 @@ pip install "git+https://github.com/MindsApplied/Minds_AI_EEG_Filter@main"
 ```
 **Package and App**
 ```bash
-pip install "git+https://github.com/MindsApplied/Minds_AI_EEG_Filter@main#subdirectory=.[examples]"
+pip install "mindsai-filter-python[examples] @ git+https://github.com/MindsApplied/Minds_AI_EEG_Filter@main""
 ```
 
 ### 1.1 Implementation
