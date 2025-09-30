@@ -110,9 +110,15 @@ def create_dark_plot(title, ylabel, lines, size=(12, 4)):
     ax.grid(True)
     return fig, ax, handles
 
+# Build plot title with channel name and position
+names_csv = (BoardShim.get_board_descr(board_id) or {}).get("eeg_names", "")
+_eeg_labels = [s.strip() for s in names_csv.split(",")] if names_csv else []
+title_suffix = f"({_eeg_labels[channel_idx]}, ch{channel_idx})" if channel_idx < len(_eeg_labels) else f"(ch{channel_idx})"
+main_title = f"MindsAI Filtered vs Raw EEG Signal {title_suffix}"
+
 # --- Plot Windows ---
 main_fig, main_ax, main_handles = create_dark_plot(
-    "MindsAI Filtered vs Raw EEG Signal", "Amplitude (uV)",
+    main_title, "Amplitude (uV)",
     [
         ("Raw EEG", "#ffffff", "-"),
         ("MAI Filtered", "#45c98f", "-"),
@@ -121,6 +127,7 @@ main_fig, main_ax, main_handles = create_dark_plot(
         ("Flatline Noise", "red",   "--", ENABLE_NOISE_HIGHLIGHT and INJECT_FLAT)
     ]
 )
+
 line_raw = main_handles[0]
 line_filtered = main_handles[1]
 line_diff = main_handles[2]
@@ -360,7 +367,7 @@ try:
             # --- Keep styling persistent ---
             main_ax.set_facecolor('black')
             main_ax.tick_params(colors='white')
-            main_ax.set_title("MindsAI Filtered vs Raw EEG Signal", color='white')
+            main_ax.set_title(main_title, color='white') 
             main_ax.set_xlabel("UTC Time (HH:MM:SS.mmm)", color='white')
             main_ax.set_ylabel("Amplitude (uV)", color='white')
             for s in main_ax.spines.values():

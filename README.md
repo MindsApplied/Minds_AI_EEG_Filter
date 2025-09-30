@@ -92,12 +92,13 @@ if not USE_SYNTHETIC:
     params.serial_port = "COM3"
 
 # Unit scaling required for boards streaming microvolts such via brainflow. Not required for standalone filter. μV→V→mindsai_python_filter→μV→Plot
-UNIT_SCALE_IN = 1e-6 if not USE_SYNTHETIC else 1.0 
+if USE_BRAINFLOW: 
+    UNIT_SCALE_IN = 1e-6 else 1.0 
 
 # Window size in samples
 window_size = fs * window_seconds
 ```
-
+> **Detrending (constant)** removes per‑channel DC offsets (in volts) before filtering so MindsAI isn’t fighting baseline bias.
 ### 2.3 EEG‑Only Averaging
 ```python
 # raw_plot_uv, filtered_plot_uv: shape = (channels, timepoints) in microvolts
@@ -107,8 +108,7 @@ eeg_ch = BoardShim.get_eeg_channels(board_id)  # BrainFlow’s EEG subset (indic
 avg_raw  = raw_plot_uv[eeg_ch, :].mean(axis=0)
 avg_filt = filtered_plot_uv[eeg_ch, :].mean(axis=0)
 ```
-
-> **Detrending (constant)** removes per‑channel DC offsets (in volts) before filtering so MindsAI isn’t fighting baseline bias.
+> **Small Filtered Average (green)** MAI removes cross-channel-incoherent artifacts; when you average across electrodes, incoherent energy no longer inflates the mean, so the trace appears visually “sparser.”
 
 ---
 
