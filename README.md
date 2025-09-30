@@ -108,7 +108,7 @@ eeg_ch = BoardShim.get_eeg_channels(board_id)  # BrainFlow’s EEG subset (indic
 avg_raw  = raw_plot_uv[eeg_ch, :].mean(axis=0)
 avg_filt = filtered_plot_uv[eeg_ch, :].mean(axis=0)
 ```
-> **Small Filtered Average (green)** MAI removes cross-channel-incoherent artifacts; when you average across electrodes, incoherent energy no longer inflates the mean, so the trace appears visually “sparser.”
+> **Small Filtered Average (green):** MAI removes cross-channel-incoherent artifacts; when you average across electrodes, incoherent energy no longer inflates the mean, so the trace appears visually “sparser.”
 
 ---
 
