@@ -45,7 +45,7 @@ The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI 
 
 ## 2) Demo App Documentation (Not required for filter usage)
 
-The app script used in the above live demo can be found in the examples folder as `Minds_AI_Filter_Real-time_Signal_Analysis.py`. After installing this package and its dependencies, the script can be called via Python in a CLI. It visualizes noise and artifact removal by your Minds AI Filter for a single channel and all channels on average. It also provides various SNR metrics, explained more below. It can connect to any headset via Brainflow, using synthetic data by default, and allows you to upload a file.
+The app script used in the above live demo can be found in the examples folder as `Minds_AI_Filter_Real-time_Signal_Analysis.py`. After installing this package and its dependencies, the script can be called via Python in a CLI. It visualizes noise and artifact removal by your Minds AI Filter for a single channel and all channels on average, in real-time. It also provides various SNR metrics, explained more below. It can connect to any headset via Brainflow, using synthetic data by default, and allows you to upload a file.
 
 ### 2.1 Optional Configurations
 ```python
