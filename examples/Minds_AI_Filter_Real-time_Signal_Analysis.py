@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import sys, os, time, datetime
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,7 +8,7 @@ from matplotlib import dates as mdates
 from matplotlib.ticker import FuncFormatter  
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
 from brainflow.data_filter import DataFilter, FilterTypes, DetrendOperations  
-import mindsai_filter_python
+import mindsai_filter_python as mai
 
 # Minds AI Filter Real-time testing project. Created by JM Wesierski
 
@@ -369,7 +369,7 @@ try:
             )
 
             # Apply MindsAI filter in volts
-            filtered_volts = mindsai_filter_python.mindsai_python_filter(prefiltered_for_mindsai, filterHyperparameter)
+            filtered_volts = mai.mindsai_python_filter(prefiltered_for_mindsai, filterHyperparameter)
 
             # Convert BOTH series back to µV for plotting/metrics
             raw_plot_uv      = raw_window_for_filter * 1e6
