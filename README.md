@@ -43,7 +43,9 @@ The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI 
 
 ---
 
-## 2) Test App Documentation (Not required for filter usage)
+## 2) Demo App Documentation (Not required for filter usage)
+
+The app script used in the above live demo can be found in the examples folder as `Minds_AI_Filter_Real-time_Signal_Analysis.py`. After installing this package and its dependencies, the script can be called via Python in a CLI. It visualizes noise and artifact removal by your Minds AI Filter for a single channel and all channels on average. It also provides various SNR metrics, explained more below. It can connect to any headset via Brainflow, using synthetic data by default, and allows you to upload a file.
 
 ### 2.1 Optional Configurations
 ```python
@@ -62,13 +64,6 @@ INJECT_BURST  = False
 INJECT_FLAT   = False
 INJECT_SINE   = False
 INJECT_WHITE  = False
-
-# Optional bandpass BEFORE MindsAI
-ENABLE_BANDPASS = True
-BP_LOW_HZ  = 1.0
-BP_HIGH_HZ = 40.0
-BP_ORDER   = 4
-BP_TYPE    = FilterTypes.BUTTERWORTH  # (zero-phase alternative: FilterTypes.BUTTERWORTH_ZERO_PHASE)
 
 # Console “flag” thresholds 
 ARTIFACT_SUPPRESSION_THRESH = 20.0  # % peak drop
@@ -96,8 +91,8 @@ fs = BoardShim.get_sampling_rate(board_id) if USE_BRAINFLOW else MANUAL_FS
 if not USE_SYNTHETIC:
     params.serial_port = "COM3"
 
-# Unit scaling required for boards streaming microvolts such as OpenBCI via brainflow. Not required for standalone filter.
-UNIT_SCALE_IN = 1e-6 if not USE_SYNTHETIC else 1.0  # μV→V for real boards; synthetic already V
+# Unit scaling required for boards streaming microvolts such via brainflow. Not required for standalone filter. μV→V→mindsai_python_filter→μV→Plot
+UNIT_SCALE_IN = 1e-6 if not USE_SYNTHETIC else 1.0 
 
 # Window size in samples
 window_size = fs * window_seconds
@@ -113,9 +108,7 @@ avg_raw  = raw_plot_uv[eeg_ch, :].mean(axis=0)
 avg_filt = filtered_plot_uv[eeg_ch, :].mean(axis=0)
 ```
 
-> **Bandpass & Detrending options (what they do):**
-> * **Bandpass (e.g., 1–40 Hz)** attenuates slow drift and high‑frequency noise *before* the MindsAI filter. This often boosts SNR and reduces variance, but can suppress DC shifts you may care about.
-> * **Detrending (constant)** removes per‑channel DC offsets (in volts) before filtering so MindsAI isn’t fighting baseline bias.
+> **Detrending (constant)** removes per‑channel DC offsets (in volts) before filtering so MindsAI isn’t fighting baseline bias.
 
 ---
 
@@ -225,7 +218,7 @@ where \( S \) is the EEG‑only index set (e.g., BrainFlow `BoardShim.get_eeg_ch
 A typical two‑line console block per window is:
 
 ```
-[Window: 12:34:56.001 → 12:34:57.001] [SNR: 9.19 dB | Signal ~8.3× stronger than noise | ≈89% signal power]  [Peak: 440.0→344.1 μV (↓95.9 μV, 22%) | Artifact Suppression]  [Variance ↓15.6% | Smoothing Effect]  [BP=ON 1.0-40.0Hz]
+[Window: 12:34:56.001 → 12:34:57.001] [SNR: 9.19 dB | Signal ~8.3× stronger than noise | ≈89% signal power]  [Peak: 440.0→344.1 μV (↓95.9 μV, 22%) | Artifact Suppression]  [Variance ↓15.6% | Smoothing Effect]
 [Baseline Shift: mean -3.1 μV | median -2.8 μV]  [SNR method: amplitude_ratio]
 ```
 
@@ -236,7 +229,6 @@ A typical two‑line console block per window is:
 * **Peak a→b (↓Δ, %)** → Section 3.2. If `%Δ_peak ≥ ARTIFACT_SUPPRESSION_THRESH`, the tag **Artifact Suppression** appears.
 * **Variance ↓%** → Section 3.4. If `%Δσ² ≥ VARIANCE_SMOOTHING_THRESH`, the tag **Smoothing Effect** appears.
 * **Baseline Shift (mean/median)** → Section 3.3. If `|Δ| ≥ DRIFT_THRESH_UV` for mean or median, the tag **Drift Correction** appears.
-* **BP=ON/OFF** → Whether the pre‑filter bandpass is enabled and its passband.
 * **Window times** → Start/End of the plotted/metrics window (UTC, millisecond precision).
 
 **How config changes affect the console**
@@ -244,7 +236,8 @@ A typical two‑line console block per window is:
 * Lower **λ** (`filterHyperparameter`) → typically larger peak and variance drops (more tags), sometimes larger baseline shifts.
 * Raise **thresholds** → fewer tags; lower thresholds → more sensitive.
 * Change **SNR_METHOD** → dB and “signal power” readouts may differ across methods.
-* Toggle **bandpass** → expect improved SNR/variance for typical EEG (1–40 Hz), at the cost of suppressing DC/ultra‑slow components.
+
+---
 
 ## Patent Status
 
