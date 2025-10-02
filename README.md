@@ -42,7 +42,7 @@ It's that easy! An intialization key is no longer required.  It expects `data` t
 The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI Filter modifies the original signal and should be input on a logarithmic scale between `0` and `0.1`. A lower `lambda` value like the default `1e-25` causes the filter to make bolder adjustments for more complex transformations that highlight the structure across `channels`, such as for real-time filtering (1 second windows). A higher `lambda` value like `1e-40` works best with more data (such as 60-second trials) for still helpful, but more conservative adjustments.
 
 ## 2) Real-time and Offline Demo Apps (Not required for filter usage)
-We provide 2 apps that make it easy to test your headset and data with the Minds AI Filter. One for real-time streaming and the other for prerecorded data. Both apps visualize the signal and removed noise, as well as provide SNR metrics for signal quality improvement.
+We provide 2 apps that make it easy to test and see signal quality improvement from the Minds AI Filter. One for real-time streaming directly from your headset, and the other for feeding segments of prerecorded data. Both apps visualize the signal and removed noise, as well as provide SNR metrics for signal quality improvement.
 
 ### 2.1 Real-Time Streaming
 The real-time demo app, used in the video above, can be found in the examples folder as `Minds_AI_Filter_Real-time_Signal_Analysis.py`.
