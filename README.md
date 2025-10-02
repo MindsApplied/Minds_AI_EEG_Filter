@@ -33,11 +33,13 @@ data = [
 tailoring_lambda = 1e-25
 filtered_data = mai.mindsai_python_filter(data, tailoring_lambda)
 ```
-It's that easy! An intialization key is no longer required.  It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage.
+It's that easy! An intialization key is no longer required.  It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage. 
 
-### 1.2 Tightening Lambda  
+<p align="center">
+  <img src="images/MAI_Filter_Lambda_Funnel_labled.png" width="480" alt="Tailoring Lambda Description Visual">
+</p>
 
-![Tailoring Lambda Description Visual](images/MAI_Filter_Lambda_Funnel_labled.png)
+### 1.2 Tightening Lambda 
 
 The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI Filter modifies the original signal and should be input on a logarithmic scale between `0` and `0.1`. A lower `lambda` value like the default `1e-25` causes the filter to make bolder adjustments for more complex transformations that highlight the structure across `channels`, such as for real-time filtering (1 second windows). A higher `lambda` value like `1e-40` works best with more data (such as 60-second trials) for still helpful, but more conservative adjustments.
 
@@ -45,10 +47,18 @@ The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI 
 We provide 2 apps that make it easy to test and see signal quality improvement from the Minds AI Filter. One for real-time streaming directly from your headset, and the other for feeding segments of prerecorded data. Both apps visualize the signal and removed noise, as well as provide SNR metrics for signal quality improvement.
 
 ### 2.1 Real-Time Streaming
+<p align="center">
+  <img src="images/MAI_Online_Demo_UI.png" alt="Real-time app UI Image">
+</p>
+
 The real-time demo app, used in the video above, can be found in the examples folder as `Minds_AI_Filter_Real-time_Signal_Analysis.py`.
 Documentation for testing and configuration can be found [here in our wiki](https://github.com/MindsApplied/Minds_AI_EEG_Filter/wiki/Real%E2%80%90time-Minds-AI-Filter-Demo-Application)
 
 ### 2.1 Offline Upload
+<p align="center">
+  <img src="images/MAI_Offline_Demo_UI.png" alt="Offline app UI Image">
+</p>
+
 The offline demo app can be found in the examples folder as  `Minds_AI_Filter_Offline_Signal_Analysis.py`.
 Documentation for testing and configuration can be found [here in our wiki](https://github.com/MindsApplied/Minds_AI_EEG_Filter/wiki/Offline-Minds-AI-Filter-Demo-Application)
 
