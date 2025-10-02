@@ -36,7 +36,7 @@ filtered_data = mai.mindsai_python_filter(data, tailoring_lambda)
 It's that easy! An intialization key is no longer required.  It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage. 
 
 <p align="center">
-  <img src="images/MAI_Filter_Lambda_Funnel_labled.png" width="480" alt="Tailoring Lambda Description Visual">
+  <img src="images/MAI_Filter_Lambda_Funnel_labled.png" width="700" alt="Tailoring Lambda Description Visual">
 </p>
 
 ### 1.2 Tightening Lambda 
