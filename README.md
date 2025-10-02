@@ -33,7 +33,8 @@ data = [
 tailoring_lambda = 1e-25
 filtered_data = mai.mindsai_python_filter(data, tailoring_lambda)
 ```
-It's that easy! An intialization key is no longer required.  It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage. 
+It's that easy! It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage. 
+> An intialization key is no longer required. 
 
 <p align="center">
   <img src="images/MAI_Filter_Lambda_Funnel_labled.png" width="700" alt="Tailoring Lambda Description Visual">
@@ -54,7 +55,7 @@ We provide 2 apps that make it easy to test and see signal quality improvement f
 The real-time demo app, used in the video above, can be found in the examples folder as `Minds_AI_Filter_Real-time_Signal_Analysis.py`.
 Documentation for testing and configuration can be found [here in our wiki](https://github.com/MindsApplied/Minds_AI_EEG_Filter/wiki/Real%E2%80%90time-Minds-AI-Filter-Demo-Application)
 
-### 2.1 Offline Upload
+### 2.2 Offline Upload
 <p align="center">
   <img src="images/MAI_Offline_Demo_UI.png" alt="Offline app UI Image">
 </p>
