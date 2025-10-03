@@ -20,17 +20,25 @@ dependencies = [
 [tool.setuptools]
 license-files = ["LICENSE"]
 
-[tool.setuptools.packages.find]
-include = ["mindsai_filter_python*"]
-exclude = ["examples*", "images*", "docs*", "tests*"]
-
 [project.optional-dependencies]
-examples = [
+# For examples/Minds_AI_Filter_Offline_Signal_Analysis.py
+offline = [
   "matplotlib>=3.7",
-  "brainflow",          
+]
+
+# For examples/Minds_AI_Filter_Real-time_Signal_Analysis.py
+online = [
+  "matplotlib>=3.7",
+  "brainflow",
+]
+
+examples = [
+  "mindsai-filter-python[offline,realtime]"
 ]
 
 [project.urls]
 Homepage = "https://github.com/MindsApplied/Minds_AI_EEG_Filter"
 
-
+[tool.setuptools.packages.find]
+include = ["mindsai_filter_python*"]
+exclude = ["examples*", "images*", "docs*", "tests*"]
