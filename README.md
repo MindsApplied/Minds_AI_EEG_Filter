@@ -1,13 +1,11 @@
 # Minds AI Filter for EEG Documentation
 
-*Your* Minds AI Signal Filter relies on sensor fusion to recognize the physics of true brain signal and, in turn, filter out artifacts and supress noise. “AI” is included in the naming convention due to its part in a larger artificial intelligence
-pipeline, but the filter does not require prior training or deep learning.
+*Your* Minds AI Signal Filter leverages sensor fusion to recognize the physics of true neural activity. It conditons the signal by filtering out dynamic artifacts, stabilizing variance, and amplifying the signal-to-noise ratio. “AI” is included in the naming convention due to its part in a larger artificial intelligence pipeline, but the filter does not require prior training or deep learning.
+- Preprint: https://doi.org/10.1101/2025.09.24.675953.
+- [Live demo of the filter and below application](https://www.youtube.com/watch?v=YgEt1vKYDc4).
 - License: Polyform Noncommercial 1.0.0 — [Contact MindsApplied](https://www.minds-applied.com/contact) for commercial usage. See [LICENSE](LICENSE).
 - Patent status: **Patent pending** (US provisional filed 2025-06-30). See [PATENTS](PATENTS.md).
 - Cite this software: see [CITATION](CITATION.cff) and the preprint below.
-- Preprint: https://doi.org/10.1101/2025.09.24.675953.
-- [Live demo of the filter and below application](https://www.youtube.com/watch?v=YgEt1vKYDc4).
-
 ---
 
 ## 1) Filter Package Installation
