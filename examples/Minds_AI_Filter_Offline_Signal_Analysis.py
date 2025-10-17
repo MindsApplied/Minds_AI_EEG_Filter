@@ -30,9 +30,9 @@ Minds AI Filter Offline testing app. Created by JM Wesierski
 # ======================= CONSTANTS / THEME =======================
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_PATH = os.path.join(APP_DIR, "data", "eeg.csv")
+DEFAULT_PATH = os.path.join(APP_DIR, "data", "eeg.edf") #csv works also
 
-LAMBDA_DEFAULT = 33
+LAMBDA_DEFAULT = 34
 
 FILTERED_COLOR  = "#45c98f" #Minds AI Filtered data
 RAW_COLOR       = "#ffffff" #Raw Signal
@@ -449,9 +449,9 @@ class App(tk.Tk):
         style.configure("Big.TCombobox", font=self.ui_font_combo, padding=2)
 
         self.file_path    = tk.StringVar(value=DEFAULT_PATH)
-        self.fs_entry     = tk.StringVar(value="256")            # default fs text/value
+        self.fs_entry     = tk.StringVar(value="500")            # default fs text/value
         self.snr_method   = tk.StringVar(value="power_ratio")
-        self.channel_idx  = tk.IntVar(value=3)
+        self.channel_idx  = tk.IntVar(value=4)
         self.lambda_exp   = tk.IntVar(value=LAMBDA_DEFAULT)
         self.status       = tk.StringVar(value="Ready.")
         self.view_window  = tk.StringVar(value="1 s")
@@ -690,7 +690,7 @@ class App(tk.Tk):
         path = filedialog.askopenfilename(
             title="Select EEG CSV",
             initialdir=os.path.join(APP_DIR, "data"),
-            initialfile="eeg.csv",
+            initialfile="eeg.edf",
             filetypes=[("EDF / CSV / TSV / text", "*.edf *.csv *.tsv *.txt"),
                        ("CSV / TSV / text", "*.csv *.tsv *.txt"),
                        ("All files", "*.*")]
