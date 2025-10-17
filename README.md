@@ -1,6 +1,12 @@
 # Minds AI Filter for EEG Documentation
 
-*Your* Minds AI Signal Filter leverages sensor fusion to recognize the physics of true neural activity. It conditons the signal by filtering out dynamic artifacts, stabilizing variance, and amplifying the signal-to-noise ratio. “AI” is included in the naming convention due to its part in a larger artificial intelligence pipeline, but the filter does not require prior training or deep learning.
+*Your* Minds AI Signal Filter uses spatial coupling and band-aware weighting to condition the signal based on the physics of true neural activity. “AI” is included in the naming convention due to its utility in artificial intelligence pipelines, but the filter itself does not use deep learning. It also doesn't require pretraining or clean stretches of data. It can work standalone or in combination with other filters (such as for specific noise) and is equipped for alternative or multi-modal time-series data.
+Specifically the MAI Filter:
+- Suppresses artifacts like transient motion/ocular bursts while preserving underlying rhythms across channels
+- Reduces high-frequency noise (~40 Hz) and sharpens low-frequency activity (~3-7Hz)
+- Smooths variance and reduces baseline-drift
+
+Additional References:
 - Preprint: https://doi.org/10.1101/2025.09.24.675953.
 - [Live demo of the filter and below application](https://www.youtube.com/watch?v=YgEt1vKYDc4).
 - License: Polyform Noncommercial 1.0.0 — [Contact MindsApplied](https://www.minds-applied.com/contact) for commercial usage. See [LICENSE](LICENSE).
