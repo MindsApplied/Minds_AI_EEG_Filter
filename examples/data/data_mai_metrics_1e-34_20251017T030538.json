@@ -1,0 +1,26 @@
+{
+  "fs_hz": 500,
+  "channels": 26,
+  "duration_sec": 120.0,
+  "lambda": 1e-34,
+  "snr_method": "power_ratio",
+  "snr_db_channel": -12.329350913556226,
+  "impact_channel": {
+    "peak_before": 3253.3744698374912,
+    "peak_after": 703.057031626781,
+    "peak_reduction": 2550.31743821071,
+    "mean_shift": 6.972792713592451e-16,
+    "median_shift": -19.706923756823784,
+    "artifact_variance_reduction_pct": 95.09299564116938
+  },
+  "tags_channel": {
+    "artifact_suppression": true,
+    "drift_correction": true,
+    "smoothing_effect": true
+  },
+  "thresholds": {
+    "artifact_suppression_pct": 20.0,
+    "drift_uv": 5.0,
+    "smoothing_pct": 5.0
+  }
+}
