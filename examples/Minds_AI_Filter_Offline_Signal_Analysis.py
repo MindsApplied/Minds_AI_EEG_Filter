@@ -35,12 +35,12 @@ DEFAULT_PATH = os.path.join(APP_DIR, "data", "eeg.csv")
 LAMBDA_DEFAULT = 33
 
 FILTERED_COLOR  = "#45c98f" #Minds AI Filtered data
-RAW_COLOR  = "#ffffff" #Raw Signal
-RMV_NOISE_COLOR    = "#889eea" #Noise
+RAW_COLOR       = "#ffffff" #Raw Signal
+RMV_NOISE_COLOR = "#889eea" #Noise
 
 MAX_BYTES    = 10 * 1024 * 1024
 
-MIN_SEC, MAX_SEC = 5, 90
+MIN_SEC, MAX_SEC = 5, 120
 MIN_FS,  MAX_FS  = 50, 512
 MIN_CH,  MAX_CH  = 4, 64
 
@@ -184,6 +184,42 @@ def read_numeric_csv(path: str):
         write_delim = " "
 
     return out, write_delim
+
+
+# ======================= (NEW) EDF INTAKE =======================
+# Optional dependency + numeric reader returning (rows x cols)
+try:
+    import pyedflib
+    _HAS_PYEDFLIB = True
+except Exception:
+    _HAS_PYEDFLIB = False
+
+def read_edf_numeric(path: str):
+    if not _HAS_PYEDFLIB:
+        raise RuntimeError(human_err("EDF support requires 'pyEDFlib' (pip install pyEDFlib).", True))
+    f = pyedflib.EdfReader(path)
+    try:
+        n_ch = f.signals_in_file
+        labels = f.getSignalLabels()
+        fs_list = [f.getSampleFrequency(i) for i in range(n_ch)]
+        # Enforce a single uniform fs for this UI
+        fs0 = int(round(fs_list[0])) if n_ch > 0 else None
+        if any(int(round(x)) != fs0 for x in fs_list):
+            raise ValueError(human_err("EDF has mixed sampling rates across channels. Use uniform-fs channels.", True))
+        ch_data = [f.readSignal(i).astype(float) for i in range(n_ch)]
+        T = min(len(x) for x in ch_data) if n_ch else 0
+        if T == 0:
+            raise ValueError(human_err("EDF appears empty or zero-length.", True))
+        arr_TxC = np.column_stack([x[:T] for x in ch_data])
+        units = []
+        try:
+            units = [f.getPhysicalDimension(i) for i in range(n_ch)]
+        except Exception:
+            units = [""] * n_ch
+        meta = {"labels": labels, "fs": fs0, "units": units}
+        return arr_TxC, meta
+    finally:
+        f._close(); del f
 
 
 # ======================= ORIENTATION & VALIDATION =======================
@@ -418,9 +454,9 @@ class App(tk.Tk):
         self.channel_idx  = tk.IntVar(value=3)
         self.lambda_exp   = tk.IntVar(value=LAMBDA_DEFAULT)
         self.status       = tk.StringVar(value="Ready.")
-        self.view_window  = tk.StringVar(value="2 s")
+        self.view_window  = tk.StringVar(value="1 s")
 
-        self.col_range_str = tk.StringVar(value="2-9")           # default column range
+        self.col_range_str = tk.StringVar(value="2-9")           # will be auto-updated after detection
 
         self._timeline_var  = tk.IntVar(value=0)
 
@@ -463,7 +499,11 @@ class App(tk.Tk):
 
         man_frm = tk.Frame(frm, bg="black")
         man_frm.grid(row=2, column=0, columnspan=4, sticky="w", pady=(6,0))
-        tk.Label(man_frm, text="Column range (start-end) [1-based]:", fg="white", bg="black", font=self.ui_font).pack(side=tk.LEFT)
+        tk.Label(
+            man_frm,
+            text="EEG channel column range (start-end) [1-based]:",
+            fg="white", bg="black", font=self.ui_font
+        ).pack(side=tk.LEFT)
         self.cols_entry = tk.Entry(man_frm, textvariable=self.col_range_str, width=20, font=self.ui_font)
         self.cols_entry.pack(side=tk.LEFT, padx=8)
         self.detect_label = tk.Label(man_frm, text="Detected: — columns", fg="#C8D1FF", bg="black", font=self.ui_font)
@@ -497,7 +537,7 @@ class App(tk.Tk):
 
         tk.Label(frm, text="View:", fg="white", bg="black", font=self.ui_font).grid(row=3, column=4, sticky="e")
         self.view_box = ttk.Combobox(
-            frm, values=["2 s", "5 s", "10 s", "30 s", "All"],
+            frm, values=["1 s", "5 s", "10 s", "30 s", "All"],
             textvariable=self.view_window, width=10, state="readonly", style="Big.TCombobox"
         )
         self.view_box.grid(row=3, column=5, sticky="w")
@@ -605,10 +645,28 @@ class App(tk.Tk):
             self.detect_label.config(text="Detected: — columns")
             return
         try:
-            arr, delim = read_numeric_csv(path)
+            # Auto-switch based on extension (EDF vs delimited text)
+            ext = os.path.splitext(path)[1].lower()
+            if ext == ".edf":
+                arr, meta = read_edf_numeric(path)
+                delim = ","  # we'll export CSV later
+                # Pre-fill fs from EDF header without changing defaults elsewhere
+                try:
+                    self.fs_entry.set(str(int(meta.get("fs"))))
+                except Exception:
+                    pass
+            else:
+                arr, delim = read_numeric_csv(path)
+
+            # Auto-fill the range to total detected columns (1-based)
+            detected_cols = arr.shape[1]
+            self.col_range_str.set(f"1-{detected_cols}")
+
             self._last_raw_matrix = arr
             self._last_write_delim = delim
-            self.detect_label.config(text=f"Detected: {arr.shape[1]} columns")
+
+            # Add the question prompt to the detector label
+            self.detect_label.config(text=f"Detected: {detected_cols} columns — Are these all EEG?")
             if not initial:
                 disp_delim = {
                     "\t": "\\t",
@@ -617,8 +675,9 @@ class App(tk.Tk):
                     ";": ";",
                     "|": "|"
                 }.get(delim, str(delim) if delim is not None else "<space>")
+                # Append the question to the console line as well
                 self._console_write(
-                    f"Detected total columns: {arr.shape[1]} (delimiter='{disp_delim}')",
+                    f"Detected total columns: {detected_cols} (delimiter='{disp_delim}') — Are these all EEG?",
                     tag="info"
                 )
         except Exception as e:
@@ -627,11 +686,14 @@ class App(tk.Tk):
                 self._console_write(str(e), tag="error")
 
     def browse_file(self):
+        # Allow selecting EDF in dialog; keep label text as-is
         path = filedialog.askopenfilename(
             title="Select EEG CSV",
             initialdir=os.path.join(APP_DIR, "data"),
             initialfile="eeg.csv",
-            filetypes=[("CSV / TSV / text", "*.csv *.tsv *.txt"), ("All files", "*.*")]
+            filetypes=[("EDF / CSV / TSV / text", "*.edf *.csv *.tsv *.txt"),
+                       ("CSV / TSV / text", "*.csv *.tsv *.txt"),
+                       ("All files", "*.*")]
         )
         if path:
             self.file_path.set(path)
@@ -659,10 +721,11 @@ class App(tk.Tk):
         try:
             seconds = float(choice.split()[0])
         except Exception:
-            seconds = 5.0
+            seconds = 1.0
         return max(1, int(round(seconds * fs)))
 
-    def _sync_timeline_bounds(self):
+    # accept a preferred start index to avoid snapping to end
+    def _sync_timeline_bounds(self, prefer_start_idx: int = None):
         if self._last_t is None or self._last_fs is None:
             self.timeline.config(from_=0, to=0)
             self._timeline_var.set(0)
@@ -674,7 +737,11 @@ class App(tk.Tk):
             self._timeline_var.set(0)
         else:
             self.timeline.config(from_=0, to=n - win)
-            self._timeline_var.set(n - win)
+            if prefer_start_idx is not None:
+                start_idx = max(0, min(prefer_start_idx, n - win))
+                self._timeline_var.set(start_idx)
+            else:
+                self._timeline_var.set(n - win)  # previous default behavior
 
     def _on_timeline_change(self):
         if self._last_t is None or self._raw_uV_cxt is None:
@@ -709,18 +776,31 @@ class App(tk.Tk):
         path = self.file_path.get().strip()
         if not path or not os.path.isfile(path):
             raise ValueError(human_err("CSV path is empty or does not exist.", True))
-        if not (path.lower().endswith(".csv") or path.lower().endswith(".tsv") or path.lower().endswith(".txt")):
-            raise ValueError(human_err("Only .csv / .tsv / .txt files are accepted.", True))
-
-        fs = self._get_fs()
 
         base_dir  = os.path.dirname(path)
         base_name = os.path.splitext(os.path.basename(path))[0]
 
-        arr_raw, delim = read_numeric_csv(path)
+        # Auto-detect extension and branch
+        ext = os.path.splitext(path)[1].lower()
+        if ext == ".edf":
+            arr_raw, meta = read_edf_numeric(path)
+            self._last_write_delim = ","  # export will be CSV
+            # Prefill fs from EDF header; user can override if desired
+            try:
+                self.fs_entry.set(str(int(meta.get("fs"))))
+            except Exception:
+                pass
+            fs = self._get_fs()
+        else:
+            if not (path.lower().endswith(".csv") or path.lower().endswith(".tsv") or path.lower().endswith(".txt")):
+                raise ValueError(human_err("Only .csv / .tsv / .txt / .edf files are accepted.", True))
+            fs = self._get_fs()
+            arr_raw, delim = read_numeric_csv(path)
+            self._last_write_delim = delim
+
         self._last_raw_matrix = arr_raw
-        self._last_write_delim = delim
-        self.detect_label.config(text=f"Detected: {arr_raw.shape[1]} columns")
+        # Keep the detector label phrasing consistent here too
+        self.detect_label.config(text=f"Detected: {arr_raw.shape[1]} columns — Are these all EEG?")
 
         n_cols = arr_raw.shape[1]
         idx = self._parse_start_end_range(self.col_range_str.get(), n_cols)
@@ -734,7 +814,7 @@ class App(tk.Tk):
         if not (MIN_CH <= num_ch <= MAX_CH):
             raise ValueError(human_err(f"Channels={num_ch} out of range ({MIN_CH}-{MAX_CH}).", True))
         if not (MIN_SEC <= dur <= MAX_SEC):
-            raise ValueError(human_err(f"Duration={dur:.2f}s out of range ({MIN_SEC}-{MAX_SEC}s).", True))
+            raise ValueError(human_err(f"Duration={dur:.2f}s out of range ({MIN_SEC}-{MAX_SEC}).", True))
 
         if self.channel_idx.get() < 0 or self.channel_idx.get() >= num_ch:
             self.channel_idx.set(0)
@@ -784,7 +864,6 @@ class App(tk.Tk):
             verdict += " — ready to export."
         self._set_status_ok(verdict)
 
-        self._sync_timeline_bounds()
         return True
 
     def _slice_for_view(self, start_idx: int):
@@ -837,20 +916,48 @@ class App(tk.Tk):
 
     def process(self):
         try:
+            # remember current left-edge time (seconds) for robust restore
+            prev_t0_sec = None
+            if (self._last_t is not None) and (self._last_fs is not None):
+                prev_idx = int(self._timeline_var.get())
+                prev_t0_sec = prev_idx / float(self._last_fs)
+
             ok = self._load_and_validate(for_export=False)
             if not ok:
                 return
-            print_metrics_console(self._last_metrics)
+
+            # restore view position
+            prefer_idx = None
+            if prev_t0_sec is not None and self._last_fs is not None and self._last_t is not None:
+                prefer_idx = int(round(prev_t0_sec * float(self._last_fs)))
+
+            self._sync_timeline_bounds(prefer_start_idx=prefer_idx)
             self._on_timeline_change()
+
+            print_metrics_console(self._last_metrics)
         except Exception as e:
             self._set_status_err(str(e))
             traceback.print_exc()
 
     def export_outputs(self):
         try:
+            # remember current view position (seconds)
+            prev_t0_sec = None
+            if (self._last_t is not None) and (self._last_fs is not None):
+                prev_idx = int(self._timeline_var.get())
+                prev_t0_sec = prev_idx / float(self._last_fs)
+
             ok = self._load_and_validate(for_export=True)
             if not ok:
                 return
+
+            # restore view position after export-triggered reload
+            prefer_idx = None
+            if prev_t0_sec is not None and self._last_fs is not None and self._last_t is not None:
+                prefer_idx = int(round(prev_t0_sec * float(self._last_fs)))
+
+            self._sync_timeline_bounds(prefer_start_idx=prefer_idx)
+            self._on_timeline_change()
 
             lam_exp = int(self.lambda_exp.get())
             lam_str = f"1e-{lam_exp}"
