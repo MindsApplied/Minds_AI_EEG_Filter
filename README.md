@@ -5,7 +5,7 @@ Specifically the MAI Filter:
 - Suppresses artifacts like transient motion/ocular bursts while preserving underlying rhythms across channels
 - Reduces high-frequency noise (>40 Hz) and sharpens low-frequency activity (~3-7Hz)
 - Smooths variance and reduces baseline-drift
-- Interpolates flatlines
+- Reconstructs flatlined electrodes from neighboring synchrony
 
 Additional References:
 - Preprint: https://doi.org/10.1101/2025.09.24.675953.
