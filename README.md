@@ -5,6 +5,7 @@ Specifically the MAI Filter:
 - Suppresses artifacts like transient motion/ocular bursts while preserving underlying rhythms across channels
 - Reduces high-frequency noise (>40 Hz) and sharpens low-frequency activity (~3-7Hz)
 - Smooths variance and reduces baseline-drift
+- Interpolates flatlines
 
 Additional References:
 - Preprint: https://doi.org/10.1101/2025.09.24.675953.
@@ -12,6 +13,7 @@ Additional References:
 - License: Polyform Noncommercial 1.0.0 — [Contact MindsApplied](https://www.minds-applied.com/contact) for commercial usage. See [LICENSE](LICENSE).
 - Patent status: **Patent pending** (US provisional filed 2025-06-30). See [PATENTS](PATENTS.md).
 - Cite this software: see [CITATION](CITATION.cff) and the preprint below.
+- Reconstructs flatlines based on surrounding neural activity 
 ---
 
 ## 1) Filter Package Installation
