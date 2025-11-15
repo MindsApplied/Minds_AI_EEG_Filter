@@ -39,7 +39,7 @@ data = [
 tailoring_lambda = 1e-25
 filtered_data = mai.mindsai_python_filter(data, tailoring_lambda)
 ```
-It's that easy! It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data as a whole, prior to other filters or indiviudal electrode analysis. It can be applied to large trials or looped for real-time usage. 
+It's that easy! It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data window prior to any other filters or indiviudal electrode analysis. It can be applied to large trials (60 seconds maximum) or looped for real-time usage (1 second minimum). 
 > An intialization key is no longer required. 
 
 <p align="center">
