@@ -25,24 +25,40 @@ import mindsai_filter_python as mai
 
 """
 Minds AI Filter Offline testing app. Created by JM Wesierski
+
+Features:
+- Load EDF or CSV/TSV/TXT EEG data (up to ~30 minutes).
+- Let the user select EEG channels by 1-based column indices and ranges
+  (e.g. "1-21,23-26,28-31").
+- Apply MindsAI filter in repeated windows (1–60 s) across the full recording.
+- Display only the first 2 minutes in the GUI for visualization.
+- Export:
+    * For EDF input: new EDF with all channels preserved but EEG channels replaced
+      by filtered data.
+    * For CSV/TSV/TXT input: CSV with all original columns and EEG columns overwritten
+      by filtered data.
 """
 
 # ======================= CONSTANTS / THEME =======================
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_PATH = os.path.join(APP_DIR, "data", "eeg.edf") #csv works also
+DEFAULT_PATH = os.path.join(APP_DIR, "data", "eeg.edf")  # csv works also
 
 LAMBDA_DEFAULT = 34
 
-FILTERED_COLOR  = "#45c98f" #Minds AI Filtered data
-RAW_COLOR       = "#ffffff" #Raw Signal
-RMV_NOISE_COLOR = "#889eea" #Noise
+FILTERED_COLOR  = "#45c98f"  # Minds AI Filtered data
+RAW_COLOR       = "#ffffff"  # Raw Signal
+RMV_NOISE_COLOR = "#889eea"  # Noise
 
 MAX_BYTES    = 10 * 1024 * 1024
 
-MIN_SEC, MAX_SEC = 5, 120
+# Recording duration limits: allow up to 30 minutes of data
+MIN_SEC, MAX_SEC = 4, 1800
 MIN_FS,  MAX_FS  = 50, 512
 MIN_CH,  MAX_CH  = 4, 64
+
+# Only show the first 2 minutes in the UI
+DISPLAY_MAX_SEC = 120
 
 PLOT_FONT_DELTA = 2
 
@@ -186,43 +202,67 @@ def read_numeric_csv(path: str):
     return out, write_delim
 
 
-# ======================= (NEW) EDF INTAKE =======================
-# Optional dependency + numeric reader returning (rows x cols)
+# ======================= EDF INTAKE (FULL, NO AUTO-DROP) =======================
+
 try:
     import pyedflib
     _HAS_PYEDFLIB = True
 except Exception:
     _HAS_PYEDFLIB = False
 
-def read_edf_numeric(path: str):
+
+def read_edf_full(path: str):
+    """
+    Read EDF and return a meta dict containing all channels, sampling rates,
+    signal arrays, and headers. No channels are dropped here.
+    """
     if not _HAS_PYEDFLIB:
         raise RuntimeError(human_err("EDF support requires 'pyEDFlib' (pip install pyEDFlib).", True))
+
+    import collections
+
     f = pyedflib.EdfReader(path)
     try:
         n_ch = f.signals_in_file
-        labels = f.getSignalLabels()
-        fs_list = [f.getSampleFrequency(i) for i in range(n_ch)]
-        # Enforce a single uniform fs for this UI
-        fs0 = int(round(fs_list[0])) if n_ch > 0 else None
-        if any(int(round(x)) != fs0 for x in fs_list):
-            raise ValueError(human_err("EDF has mixed sampling rates across channels. Use uniform-fs channels.", True))
-        ch_data = [f.readSignal(i).astype(float) for i in range(n_ch)]
-        T = min(len(x) for x in ch_data) if n_ch else 0
-        if T == 0:
-            raise ValueError(human_err("EDF appears empty or zero-length.", True))
-        arr_TxC = np.column_stack([x[:T] for x in ch_data])
-        units = []
+        labels_all = f.getSignalLabels()
+        fs_list = [float(f.getSampleFrequency(i)) for i in range(n_ch)]
+        fs_ints = [int(round(x)) for x in fs_list]
+        nsamples = f.getNSamples()  # list of samples per channel
+
+        valid_fs = [fs for fs in fs_ints if fs > 0]
+        if not valid_fs:
+            raise ValueError(human_err("EDF contains no channels with positive sampling rate.", True))
+        counter = collections.Counter(valid_fs)
+        majority_fs, _ = counter.most_common(1)[0]
+
+        # Read all channels fully
+        signals_all = [f.readSignal(i).astype(float) for i in range(n_ch)]
+
         try:
-            units = [f.getPhysicalDimension(i) for i in range(n_ch)]
+            units_all = [f.getPhysicalDimension(i) for i in range(n_ch)]
         except Exception:
-            units = [""] * n_ch
-        meta = {"labels": labels, "fs": fs0, "units": units}
-        return arr_TxC, meta
+            units_all = [""] * n_ch
+
+        file_header    = f.getHeader()
+        signal_headers = [f.getSignalHeader(i) for i in range(n_ch)]
+
+        meta = {
+            "labels": labels_all,
+            "fs_list": fs_ints,
+            "majority_fs": majority_fs,
+            "units": units_all,
+            "nsamples": nsamples,
+            "signals_all": signals_all,
+            "file_header": file_header,
+            "signal_headers": signal_headers,
+        }
+        return meta
     finally:
-        f._close(); del f
+        f._close()
+        del f
 
 
-# ======================= ORIENTATION & VALIDATION =======================
+# ======================= ORIENTATION & VALIDATION (CSV/TXT ONLY) =======================
 
 def decide_orientation(arr: np.ndarray, fs: int):
     r, c = arr.shape
@@ -319,6 +359,7 @@ def compute_metrics(raw_uV: np.ndarray, filt_uV: np.ndarray, method: str, ch_idx
 
     return metrics
 
+
 def print_metrics_console(metrics: dict):
     snr_db = metrics["snr_db_channel"]
     if snr_db is None:
@@ -342,7 +383,7 @@ def print_metrics_console(metrics: dict):
     print()
 
 
-# ======================= EXPORT (SAME FORMAT AS INPUT) =======================
+# ======================= EXPORT HELPERS =======================
 
 def save_filtered_and_metrics_same_format(
     base_dir,
@@ -356,6 +397,12 @@ def save_filtered_and_metrics_same_format(
     write_delim,
     metrics
 ):
+    """
+    CSV/TSV/TXT export:
+    - full_input_numeric_rows_cols: original (T x C) numeric matrix
+    - selected_indices_0based: columns that were EEG and filtered
+    - filt_cxt_volts: filtered EEG block in volts, shape (C x T) *in cable orientation*
+    """
     ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%S")
     filtered_name = f"{base_name}_mai_filtered_{lam_str}_{ts}.csv"
     metrics_name  = f"{base_name}_mai_metrics_{lam_str}_{ts}.json"
@@ -389,6 +436,81 @@ def save_filtered_and_metrics_same_format(
     return filtered_path, metrics_path
 
 
+def save_filtered_edf_and_metrics(
+    edf_path,
+    meta,
+    eeg_indices,
+    filt_cxt_volts,
+    unit_scale_in,
+    metrics,
+    lam_str
+):
+    """
+    EDF export:
+    - edf_path: input EDF path
+    - meta: dict from read_edf_full()
+    - eeg_indices: 0-based EDF channel indices selected as EEG
+    - filt_cxt_volts: filtered EEG block in volts, shape (C x T), where row i corresponds
+                      to eeg_indices[i]
+    - unit_scale_in: input-unit → volts scale factor (e.g. 1e-6 for µV)
+    - metrics: JSON-able dict
+    - lam_str: string like "1e-34" for filenames
+    """
+    if not _HAS_PYEDFLIB:
+        raise RuntimeError(human_err("EDF export requires 'pyEDFlib'.", True))
+
+    ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%S")
+    base_dir  = os.path.dirname(edf_path)
+    base_name = os.path.splitext(os.path.basename(edf_path))[0]
+
+    out_edf  = os.path.join(base_dir, f"{base_name}_mai_filtered_{lam_str}_{ts}.edf")
+    out_json = os.path.join(base_dir, f"{base_name}_mai_metrics_{lam_str}_{ts}.json")
+
+    labels         = meta["labels"]
+    fs_list        = meta["fs_list"]
+    signals_all    = meta["signals_all"]
+    nsamples       = meta["nsamples"]
+    file_header    = meta["file_header"]
+    signal_headers = meta["signal_headers"]
+
+    n_ch = len(labels)
+    C, T = filt_cxt_volts.shape
+    if C != len(eeg_indices):
+        raise RuntimeError(
+            f"Filtered EEG block has {C} rows but eeg_indices has {len(eeg_indices)} channels."
+        )
+
+    # Start from original signals
+    signals_out = [np.array(sig, copy=True) for sig in signals_all]
+
+    # Convert filtered data back to original units
+    inv_unit = 1.0 / unit_scale_in
+    filt_in_orig_unit = filt_cxt_volts * inv_unit  # (C x T)
+
+    for row_idx, ch_idx in enumerate(eeg_indices):
+        if ch_idx < 0 or ch_idx >= n_ch:
+            continue
+        n_orig = nsamples[ch_idx]
+        n_use  = min(T, n_orig)
+        signals_out[ch_idx][:n_use] = filt_in_orig_unit[row_idx, :n_use]
+
+    writer = pyedflib.EdfWriter(
+        out_edf,
+        n_ch,
+        file_type=pyedflib.FILETYPE_EDFPLUS
+    )
+
+    writer.setHeader(file_header)
+    writer.setSignalHeaders(signal_headers)
+    writer.writeSamples(signals_out)
+    writer.close()
+
+    with open(out_json, "w", encoding="utf-8") as f:
+        json.dump(metrics, f, indent=2)
+
+    return out_edf, out_json
+
+
 # ======================= PLOTTING HELPERS =======================
 
 def draw_dark(ax):
@@ -400,6 +522,7 @@ def draw_dark(ax):
     ax.yaxis.label.set_color("white")
     ax.title.set_color("white")
     ax.grid(True, alpha=0.2, color="white")
+
 
 def _apply_view_limits(ax, t, y_list, clip_pct=None):
     if t.size == 0:
@@ -451,12 +574,15 @@ class App(tk.Tk):
         self.file_path    = tk.StringVar(value=DEFAULT_PATH)
         self.fs_entry     = tk.StringVar(value="500")            # default fs text/value
         self.snr_method   = tk.StringVar(value="power_ratio")
-        self.channel_idx  = tk.IntVar(value=4)
+        self.channel_idx  = tk.IntVar(value=0)
         self.lambda_exp   = tk.IntVar(value=LAMBDA_DEFAULT)
         self.status       = tk.StringVar(value="Ready.")
         self.view_window  = tk.StringVar(value="1 s")
+        # Filter window for repeated chunked filtering
+        self.filter_window = tk.StringVar(value="30 s")
 
-        self.col_range_str = tk.StringVar(value="2-9")           # will be auto-updated after detection
+        # Supports multiple ranges: e.g. "1-21,23-26,28-31"
+        self.col_range_str = tk.StringVar(value="1-8")
 
         self._timeline_var  = tk.IntVar(value=0)
 
@@ -470,11 +596,16 @@ class App(tk.Tk):
         self._last_lambda = None
         self._last_channel = 0
         self._last_t = None
-        self._last_raw_matrix = None
+        self._last_raw_matrix = None    # for CSV/TSV/TXT
         self._last_write_delim = ","
-        self._last_selected_indices = None
+        self._last_selected_indices = None  # for CSV/TSV/TXT
         self._unit_scale_in = 1e-6
         self._unit_name_in  = "µV"
+
+        # EDF-specific state
+        self._edf_meta = None
+        self._edf_is_input = False
+        self._edf_eeg_indices = None  # 0-based EDF channel indices used as EEG
 
         self._build_controls()
         self._build_console()
@@ -483,11 +614,13 @@ class App(tk.Tk):
 
         self._try_update_detected_columns(initial=True)
 
+    # ---------- UI building ----------
+
     def _build_controls(self):
         frm = tk.Frame(self, bg="black")
         frm.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
 
-        tk.Label(frm, text="CSV:", fg="white", bg="black", font=self.ui_font).grid(row=0, column=0, sticky="w")
+        tk.Label(frm, text="EDF/CSV:", fg="white", bg="black", font=self.ui_font).grid(row=0, column=0, sticky="w")
         tk.Entry(frm, textvariable=self.file_path, width=70, font=self.ui_font).grid(row=0, column=1, padx=5)
         ttk.Button(frm, text="Browse…", command=self.browse_file).grid(row=0, column=2, padx=5)
         ttk.Button(frm, text="Open folder", command=self.open_folder).grid(row=0, column=3, padx=5)
@@ -501,10 +634,10 @@ class App(tk.Tk):
         man_frm.grid(row=2, column=0, columnspan=4, sticky="w", pady=(6,0))
         tk.Label(
             man_frm,
-            text="EEG channel column range (start-end) [1-based]:",
+            text="EEG channel columns (1-based):",
             fg="white", bg="black", font=self.ui_font
         ).pack(side=tk.LEFT)
-        self.cols_entry = tk.Entry(man_frm, textvariable=self.col_range_str, width=20, font=self.ui_font)
+        self.cols_entry = tk.Entry(man_frm, textvariable=self.col_range_str, width=30, font=self.ui_font)
         self.cols_entry.pack(side=tk.LEFT, padx=8)
         self.detect_label = tk.Label(man_frm, text="Detected: — columns", fg="#C8D1FF", bg="black", font=self.ui_font)
         self.detect_label.pack(side=tk.LEFT, padx=10)
@@ -522,9 +655,26 @@ class App(tk.Tk):
         self.lam_label = tk.Label(lam_frm, text=f"1e-{LAMBDA_DEFAULT} (default)", fg="white", bg="black", font=self.ui_font)
         self.lam_label.pack(side=tk.LEFT)
 
+        # Filter window length selector
+        filt_frm = tk.Frame(frm, bg="black")
+        filt_frm.grid(row=4, column=0, columnspan=2, sticky="w", pady=2)
+        tk.Label(
+            filt_frm, text="Filter window (sec):",
+            fg="white", bg="black", font=self.ui_font
+        ).pack(side=tk.LEFT)
+        self.filter_box = ttk.Combobox(
+            filt_frm,
+            values=["1 s", "4 s", "30 s", "60 s"],
+            textvariable=self.filter_window,
+            width=10,
+            state="readonly",
+            style="Big.TCombobox"
+        )
+        self.filter_box.pack(side=tk.LEFT, padx=8)
+
         ch_frm = tk.Frame(frm, bg="black")
         ch_frm.grid(row=1, column=4, columnspan=2, sticky="w")
-        tk.Label(ch_frm, text="Channel:", fg="white", bg="black", font=self.ui_font).pack(side=tk.LEFT)
+        tk.Label(ch_frm, text="Channel (plot index):", fg="white", bg="black", font=self.ui_font).pack(side=tk.LEFT)
         self.ch_spin = tk.Spinbox(ch_frm, from_=0, to=63, width=5, textvariable=self.channel_idx, font=self.ui_font)
         self.ch_spin.pack(side=tk.LEFT, padx=5)
 
@@ -615,6 +765,8 @@ class App(tk.Tk):
         for t in self.legend1.get_texts(): t.set_color("white")
         self.legend1.get_frame().set_facecolor("black"); self.legend1.get_frame().set_edgecolor("white")
 
+    # ---------- Console helpers ----------
+
     def _console_write(self, text: str, tag="info"):
         self.console.configure(state="normal")
         if self.console.index("end-1c") != "1.0":
@@ -639,34 +791,39 @@ class App(tk.Tk):
         e = int(self.lambda_exp.get())
         self.lam_label.config(text=f"1e-{e}")
 
+    # ---------- Detection & file selection ----------
+
     def _try_update_detected_columns(self, initial=False):
         path = self.file_path.get().strip()
         if not path or not os.path.isfile(path):
             self.detect_label.config(text="Detected: — columns")
+            self._edf_meta = None
+            self._edf_is_input = False
             return
         try:
-            # Auto-switch based on extension (EDF vs delimited text)
             ext = os.path.splitext(path)[1].lower()
             if ext == ".edf":
-                arr, meta = read_edf_numeric(path)
-                delim = ","  # we'll export CSV later
-                # Pre-fill fs from EDF header without changing defaults elsewhere
+                meta = read_edf_full(path)
+                self._edf_meta = meta
+                self._edf_is_input = True
+                n_cols = len(meta["labels"])
+                # Default fs to majority fs
                 try:
-                    self.fs_entry.set(str(int(meta.get("fs"))))
+                    self.fs_entry.set(str(int(meta.get("majority_fs"))))
                 except Exception:
                     pass
+                delim = "<EDF>"
             else:
                 arr, delim = read_numeric_csv(path)
+                self._last_raw_matrix = arr
+                n_cols = arr.shape[1]
+                self._edf_meta = None
+                self._edf_is_input = False
 
-            # Auto-fill the range to total detected columns (1-based)
-            detected_cols = arr.shape[1]
-            self.col_range_str.set(f"1-{detected_cols}")
+            # Default EEG selection: all channels
+            self.col_range_str.set(f"1-{n_cols}")
+            self.detect_label.config(text=f"Detected: {n_cols} columns — Are these all EEG?")
 
-            self._last_raw_matrix = arr
-            self._last_write_delim = delim
-
-            # Add the question prompt to the detector label
-            self.detect_label.config(text=f"Detected: {detected_cols} columns — Are these all EEG?")
             if not initial:
                 disp_delim = {
                     "\t": "\\t",
@@ -674,10 +831,9 @@ class App(tk.Tk):
                     ",": ",",
                     ";": ";",
                     "|": "|"
-                }.get(delim, str(delim) if delim is not None else "<space>")
-                # Append the question to the console line as well
+                }.get(delim, str(delim) if delim is not None else "<EDF>")
                 self._console_write(
-                    f"Detected total columns: {detected_cols} (delimiter='{disp_delim}') — Are these all EEG?",
+                    f"Detected total columns: {n_cols} (delimiter='{disp_delim}') — Are these all EEG?",
                     tag="info"
                 )
         except Exception as e:
@@ -686,9 +842,8 @@ class App(tk.Tk):
                 self._console_write(str(e), tag="error")
 
     def browse_file(self):
-        # Allow selecting EDF in dialog; keep label text as-is
         path = filedialog.askopenfilename(
-            title="Select EEG CSV",
+            title="Select EEG EDF/CSV",
             initialdir=os.path.join(APP_DIR, "data"),
             initialfile="eeg.edf",
             filetypes=[("EDF / CSV / TSV / text", "*.edf *.csv *.tsv *.txt"),
@@ -703,6 +858,8 @@ class App(tk.Tk):
         p = os.path.dirname(self.file_path.get())
         if not p: p = os.getcwd()
         webbrowser.open(os.path.abspath(p))
+
+    # ---------- Parsing helpers ----------
 
     def _get_fs(self):
         txt = self.fs_entry.get().strip()
@@ -724,24 +881,38 @@ class App(tk.Tk):
             seconds = 1.0
         return max(1, int(round(seconds * fs)))
 
-    # accept a preferred start index to avoid snapping to end
+    def _filter_window_seconds(self) -> float:
+        txt = (self.filter_window.get() or "30 s").strip().lower()
+        try:
+            return float(txt.split()[0])
+        except Exception:
+            return 30.0
+
+    def _filter_window_len_samples(self, fs: int, n_total: int) -> int:
+        sec = self._filter_window_seconds()
+        win = max(1, int(round(sec * fs)))
+        return min(win, n_total)
+
+    # Accept a preferred start index to avoid snapping to end
     def _sync_timeline_bounds(self, prefer_start_idx: int = None):
         if self._last_t is None or self._last_fs is None:
             self.timeline.config(from_=0, to=0)
             self._timeline_var.set(0)
             return
-        n = self._last_t.size
-        win = self._view_len_samples(self._last_fs, n)
-        if win >= n:
+        n_total = self._last_t.size
+        fs = self._last_fs
+        n_display = min(n_total, int(DISPLAY_MAX_SEC * fs))
+        win = self._view_len_samples(fs, n_display)
+        if win >= n_display:
             self.timeline.config(from_=0, to=0)
             self._timeline_var.set(0)
         else:
-            self.timeline.config(from_=0, to=n - win)
+            self.timeline.config(from_=0, to=n_display - win)
             if prefer_start_idx is not None:
-                start_idx = max(0, min(prefer_start_idx, n - win))
+                start_idx = max(0, min(prefer_start_idx, n_display - win))
                 self._timeline_var.set(start_idx)
             else:
-                self._timeline_var.set(n - win)  # previous default behavior
+                self._timeline_var.set(0)
 
     def _on_timeline_change(self):
         if self._last_t is None or self._raw_uV_cxt is None:
@@ -753,72 +924,178 @@ class App(tk.Tk):
         self._on_timeline_change()
 
     @staticmethod
-    def _parse_start_end_range(text: str, n_cols: int):
+    def _parse_column_selection(text: str, n_cols: int):
+        """
+        Parse something like:
+          "1-8" or "1-21,23-26,28-31"
+        into a sorted, unique 0-based index array.
+        """
         s = (text or "").strip()
         if not s:
-            raise ValueError(human_err("Column range is empty. Use start-end (e.g., 2-17).", True))
-        m = re.match(r"^\s*(\d+)\s*[-:]\s*(\d+)\s*$", s)
-        if not m:
-            raise ValueError(human_err("Column range must be 'start-end' (e.g., 2-17).", True))
-        a1 = int(m.group(1)); b1 = int(m.group(2))
-        if a1 > b1:
-            a1, b1 = b1, a1
-        a = a1 - 1
-        b = b1 - 1
-        if a < 0 or b >= n_cols:
-            raise ValueError(human_err(f"Range {a1}-{b1} is out of bounds for file with {n_cols} columns.", True))
-        idx = np.arange(a, b + 1, dtype=int)
+            raise ValueError(human_err("Column selection is empty. Use 1-based indices/ranges, e.g. 1-21,23-26.", True))
+
+        tokens = [tok.strip() for tok in s.split(",") if tok.strip()]
+        if not tokens:
+            raise ValueError(human_err("Column selection is empty. Use 1-based indices/ranges, e.g. 1-21,23-26.", True))
+
+        indices = []
+        for tok in tokens:
+            m = re.match(r"^(\d+)\s*[-:]\s*(\d+)$", tok)
+            if m:
+                a1 = int(m.group(1))
+                b1 = int(m.group(2))
+                if a1 > b1:
+                    a1, b1 = b1, a1
+                for k in range(a1, b1 + 1):
+                    indices.append(k - 1)
+                continue
+
+            if tok.isdigit():
+                k1 = int(tok)
+                indices.append(k1 - 1)
+                continue
+
+            raise ValueError(human_err(
+                f"Invalid token '{tok}' in column selection. Use 1-based indices or ranges like 1-8,10,12-16.",
+                True
+            ))
+
+        idx = np.unique(np.array(indices, dtype=int))
+        if idx.size == 0:
+            raise ValueError(human_err("No valid columns selected.", True))
+        if idx.min() < 0 or idx.max() >= n_cols:
+            raise ValueError(human_err(
+                f"Selected column index out of bounds. File has {n_cols} columns (1-based: 1–{n_cols}).",
+                True
+            ))
         if idx.size < MIN_CH or idx.size > MAX_CH:
-            raise ValueError(human_err(f"Selected {idx.size} columns; require {MIN_CH}–{MAX_CH}.", True))
+            raise ValueError(human_err(
+                f"Selected {idx.size} columns; require {MIN_CH}–{MAX_CH}.",
+                True
+            ))
         return idx
+
+    # ---------- Core loading, filtering, metrics ----------
 
     def _load_and_validate(self, for_export=False):
         path = self.file_path.get().strip()
         if not path or not os.path.isfile(path):
-            raise ValueError(human_err("CSV path is empty or does not exist.", True))
+            raise ValueError(human_err("File path is empty or does not exist.", True))
 
         base_dir  = os.path.dirname(path)
         base_name = os.path.splitext(os.path.basename(path))[0]
-
-        # Auto-detect extension and branch
         ext = os.path.splitext(path)[1].lower()
+
+        # Variables to fill: cxt (C x T), fs, flipped, selected indices
+        flipped = False
+        self._edf_eeg_indices = None
+        self._edf_meta = None
+
         if ext == ".edf":
-            arr_raw, meta = read_edf_numeric(path)
-            self._last_write_delim = ","  # export will be CSV
-            # Prefill fs from EDF header; user can override if desired
+            # EDF path: keep all channels, filter only EEG subset at majority fs
+            meta = read_edf_full(path)
+            self._edf_meta = meta
+            self._edf_is_input = True
+
+            labels  = meta["labels"]
+            fs_list = meta["fs_list"]
+            sigs    = meta["signals_all"]
+            nsamples = meta["nsamples"]
+            maj_fs  = meta["majority_fs"]
+
+            n_cols = len(labels)
+            # Log channels that are NOT at the majority sampling rate
+            for i, (lab, fsi) in enumerate(zip(labels, fs_list)):
+                if fsi != maj_fs:
+                    self._console_write(
+                        f"[EDF] Channel {i+1} '{lab}' has fs={fsi} Hz (non-majority {maj_fs} Hz). "
+                        f"Consider excluding this channel in the EEG column selection.",
+                        tag="info"
+                    )
+
             try:
-                self.fs_entry.set(str(int(meta.get("fs"))))
+                self.fs_entry.set(str(int(maj_fs)))
             except Exception:
                 pass
             fs = self._get_fs()
+
+            # User's selection refers to EDF channel indices (all channels)
+            idx_all = self._parse_column_selection(self.col_range_str.get(), n_cols)
+
+            # Keep only selected channels that match majority fs
+            eeg_indices = []
+            for ch_idx in idx_all:
+                fsi = fs_list[ch_idx]
+                if fsi != maj_fs:
+                    self._console_write(
+                        f"[EDF] Skipping channel {ch_idx+1} '{labels[ch_idx]}' at fs={fsi} Hz "
+                        f"(non-majority {maj_fs} Hz) for MindsAI filtering.",
+                        tag="info"
+                    )
+                    continue
+                eeg_indices.append(ch_idx)
+
+            if not eeg_indices:
+                raise ValueError(human_err(
+                    f"No selected channels are at the majority sampling rate ({maj_fs} Hz); nothing to filter.",
+                    True
+                ))
+
+            # Build C x T matrix from EEG channels
+            T = min(nsamples[ch_idx] for ch_idx in eeg_indices)
+            if T <= 0:
+                raise ValueError(human_err("EDF EEG channels appear to have zero length.", True))
+
+            cxt = np.stack(
+                [np.asarray(sigs[ch_idx][:T], dtype=float) for ch_idx in eeg_indices],
+                axis=0
+            )  # C x T
+
+            num_ch = cxt.shape[0]
+            dur = T / fs
+
+            if not (MIN_CH <= num_ch <= MAX_CH):
+                raise ValueError(human_err(f"Channels={num_ch} out of range ({MIN_CH}-{MAX_CH}).", True))
+            if not (MIN_SEC <= dur <= MAX_SEC):
+                raise ValueError(human_err(f"Duration={dur:.2f}s out of range ({MIN_SEC}-{MAX_SEC} s).", True))
+
+            self._edf_eeg_indices = eeg_indices
+            self._last_selected_indices = None
+            flipped = False
+
         else:
+            # CSV/TSV/TXT path: numeric matrix, then orientation detection
             if not (path.lower().endswith(".csv") or path.lower().endswith(".tsv") or path.lower().endswith(".txt")):
                 raise ValueError(human_err("Only .csv / .tsv / .txt / .edf files are accepted.", True))
             fs = self._get_fs()
             arr_raw, delim = read_numeric_csv(path)
+            self._last_raw_matrix = arr_raw
             self._last_write_delim = delim
+            self._edf_is_input = False
 
-        self._last_raw_matrix = arr_raw
-        # Keep the detector label phrasing consistent here too
-        self.detect_label.config(text=f"Detected: {arr_raw.shape[1]} columns — Are these all EEG?")
+            n_cols = arr_raw.shape[1]
+            idx = self._parse_column_selection(self.col_range_str.get(), n_cols)
+            self._last_selected_indices = idx
 
-        n_cols = arr_raw.shape[1]
-        idx = self._parse_start_end_range(self.col_range_str.get(), n_cols)
-        self._last_selected_indices = idx
-        arr_selected = arr_raw[:, idx]
+            arr_selected = arr_raw[:, idx]
+            cxt, flipped = decide_orientation(arr_selected, fs)
+            num_ch, T = cxt.shape
+            dur = T / fs
 
-        cxt, flipped = decide_orientation(arr_selected, fs)
+            if not (MIN_CH <= num_ch <= MAX_CH):
+                raise ValueError(human_err(f"Channels={num_ch} out of range ({MIN_CH}-{MAX_CH}).", True))
+            if not (MIN_SEC <= dur <= MAX_SEC):
+                raise ValueError(human_err(f"Duration={dur:.2f}s out of range ({MIN_SEC}-{MAX_SEC} s).", True))
+
+        # cxt is now C x T, fs is chosen, flipped tells orientation for CSV export
         num_ch, T = cxt.shape
         dur = T / fs
 
-        if not (MIN_CH <= num_ch <= MAX_CH):
-            raise ValueError(human_err(f"Channels={num_ch} out of range ({MIN_CH}-{MAX_CH}).", True))
-        if not (MIN_SEC <= dur <= MAX_SEC):
-            raise ValueError(human_err(f"Duration={dur:.2f}s out of range ({MIN_SEC}-{MAX_SEC}).", True))
-
+        # Make sure plotting channel index is in range
         if self.channel_idx.get() < 0 or self.channel_idx.get() >= num_ch:
             self.channel_idx.set(0)
 
+        # Unit detection
         median_abs = float(np.nanmedian(np.abs(cxt)))
         if median_abs > 1e4:
             self._unit_scale_in = 1e-9
@@ -827,27 +1104,53 @@ class App(tk.Tk):
             self._unit_scale_in = 1e-6
             self._unit_name_in  = "µV"
 
-        self._console_write(f"[Units] Detected input: {self._unit_name_in} (scale {self._unit_scale_in:g} → V)", tag="info")
+        self._console_write(
+            f"[Units] Detected input: {self._unit_name_in} (scale {self._unit_scale_in:g} → V)",
+            tag="info"
+        )
 
+        # Convert to volts, DC-center per channel
         raw_volts_cxt = cxt * self._unit_scale_in
         raw_volts_cxt = raw_volts_cxt - np.mean(raw_volts_cxt, axis=1, keepdims=True)
 
         lam_exp = int(self.lambda_exp.get())
         lam = 10.0 ** (-lam_exp)
 
+        # Chunked filtering across full recording
+        T = raw_volts_cxt.shape[1]
+        win_samples = self._filter_window_len_samples(fs, T)
+        filt_volts_cxt = np.zeros_like(raw_volts_cxt)
+        start = 0
+        n_chunks = 0
         try:
-            filt_volts_cxt = mai.mindsai_python_filter(raw_volts_cxt, lam)
+            while start < T:
+                end = min(start + win_samples, T)
+                seg = raw_volts_cxt[:, start:end]
+                seg_filt = mai.mindsai_python_filter(seg, lam)
+                filt_volts_cxt[:, start:end] = seg_filt
+                start = end
+                n_chunks += 1
         except Exception as e:
-            raise RuntimeError(f"MindsAI filter error: {e}")
+            raise RuntimeError(f"MindsAI filter error during chunked filtering: {e}")
 
+        filt_win_sec = self._filter_window_seconds()
+        self._console_write(
+            f"[Filter] Applied MindsAI in {n_chunks} window(s) of ~{filt_win_sec:.2f} s over {dur:.2f} s total.",
+            tag="info"
+        )
+
+        # For metrics / plotting, convert to µV
         raw_uV_cxt  = raw_volts_cxt  / 1e-6
         filt_uV_cxt = filt_volts_cxt / 1e-6
 
-        ch = int(self.channel_idx.get())
+        ch_plot = int(self.channel_idx.get())
         method = self.snr_method.get()
-        metrics = compute_metrics(raw_uV_cxt, filt_uV_cxt, method, ch, fs)
+        metrics = compute_metrics(raw_uV_cxt, filt_uV_cxt, method, ch_plot, fs)
         metrics["lambda"] = lam
+        metrics["filter_window_sec"] = float(filt_win_sec)
+        metrics["filter_chunks"] = int(n_chunks)
 
+        # Persist state for plotting/export
         self._raw_input_orientation_timepoints_by_channels = flipped
         self._raw_uV_cxt = raw_uV_cxt
         self._filt_uV_cxt = filt_uV_cxt
@@ -856,7 +1159,7 @@ class App(tk.Tk):
         self._last_base_name = base_name
         self._last_fs = fs
         self._last_lambda = lam
-        self._last_channel = ch
+        self._last_channel = ch_plot
         self._last_t = np.arange(T) / fs
 
         verdict = f"Accepted: {num_ch} ch, fs={fs} Hz, {dur:.2f} s, λ=1e-{lam_exp}"
@@ -866,12 +1169,15 @@ class App(tk.Tk):
 
         return True
 
+    # ---------- Plotting / view ----------
+
     def _slice_for_view(self, start_idx: int):
-        n = self._last_t.size
+        n_total = self._last_t.size
         fs = self._last_fs
-        win = self._view_len_samples(fs, n)
-        i0 = max(0, min(start_idx, max(0, n - win)))
-        i1 = i0 + win
+        n_display = min(n_total, int(DISPLAY_MAX_SEC * fs))
+        win = self._view_len_samples(fs, n_display)
+        i0 = max(0, min(start_idx, max(0, n_display - win)))
+        i1 = min(i0 + win, n_display)
         t = self._last_t[i0:i1]
         ch = self._last_channel
         raw = self._raw_uV_cxt[ch, i0:i1]
@@ -914,9 +1220,10 @@ class App(tk.Tk):
             self._set_status_err(str(e))
             traceback.print_exc()
 
+    # ---------- Actions ----------
+
     def process(self):
         try:
-            # remember current left-edge time (seconds) for robust restore
             prev_t0_sec = None
             if (self._last_t is not None) and (self._last_fs is not None):
                 prev_idx = int(self._timeline_var.get())
@@ -926,7 +1233,6 @@ class App(tk.Tk):
             if not ok:
                 return
 
-            # restore view position
             prefer_idx = None
             if prev_t0_sec is not None and self._last_fs is not None and self._last_t is not None:
                 prefer_idx = int(round(prev_t0_sec * float(self._last_fs)))
@@ -941,7 +1247,6 @@ class App(tk.Tk):
 
     def export_outputs(self):
         try:
-            # remember current view position (seconds)
             prev_t0_sec = None
             if (self._last_t is not None) and (self._last_fs is not None):
                 prev_idx = int(self._timeline_var.get())
@@ -951,7 +1256,6 @@ class App(tk.Tk):
             if not ok:
                 return
 
-            # restore view position after export-triggered reload
             prefer_idx = None
             if prev_t0_sec is not None and self._last_fs is not None and self._last_t is not None:
                 prefer_idx = int(round(prev_t0_sec * float(self._last_fs)))
@@ -962,20 +1266,46 @@ class App(tk.Tk):
             lam_exp = int(self.lambda_exp.get())
             lam_str = f"1e-{lam_exp}"
 
-            fpath, mpath = save_filtered_and_metrics_same_format(
-                base_dir=self._last_base_dir,
-                base_name=self._last_base_name,
-                lam_str=lam_str,
-                full_input_numeric_rows_cols=self._last_raw_matrix,
-                selected_indices_0based=self._last_selected_indices,
-                filt_cxt_volts=self._filt_uV_cxt * 1e-6,
-                flipped=self._raw_input_orientation_timepoints_by_channels,
-                unit_scale_in=self._unit_scale_in,
-                write_delim=self._last_write_delim,
-                metrics=self._last_metrics
-            )
+            path = self.file_path.get().strip()
+            ext = os.path.splitext(path)[1].lower()
 
-            self._set_status_ok(f"Exported:\n  {os.path.basename(fpath)}\n  {os.path.basename(mpath)}")
+            if ext == ".edf":
+                if not self._edf_meta or self._edf_eeg_indices is None:
+                    raise RuntimeError("EDF metadata or EEG indices missing; cannot export EDF.")
+                # _filt_uV_cxt is in µV; convert to volts for export helper
+                filt_cxt_volts = self._filt_uV_cxt * 1e-6
+                out_edf, out_json = save_filtered_edf_and_metrics(
+                    edf_path=path,
+                    meta=self._edf_meta,
+                    eeg_indices=self._edf_eeg_indices,
+                    filt_cxt_volts=filt_cxt_volts,
+                    unit_scale_in=self._unit_scale_in,
+                    metrics=self._last_metrics,
+                    lam_str=lam_str
+                )
+                self._set_status_ok(
+                    f"Exported EDF:\n  {os.path.basename(out_edf)}\n  {os.path.basename(out_json)}"
+                )
+            else:
+                if self._last_raw_matrix is None or self._last_selected_indices is None:
+                    raise RuntimeError("No CSV/TSV/TXT input matrix or selected indices for export.")
+                filt_cxt_volts = self._filt_uV_cxt * 1e-6
+                fpath, mpath = save_filtered_and_metrics_same_format(
+                    base_dir=self._last_base_dir,
+                    base_name=self._last_base_name,
+                    lam_str=lam_str,
+                    full_input_numeric_rows_cols=self._last_raw_matrix,
+                    selected_indices_0based=self._last_selected_indices,
+                    filt_cxt_volts=filt_cxt_volts,
+                    flipped=self._raw_input_orientation_timepoints_by_channels,
+                    unit_scale_in=self._unit_scale_in,
+                    write_delim=self._last_write_delim,
+                    metrics=self._last_metrics
+                )
+                self._set_status_ok(
+                    f"Exported CSV:\n  {os.path.basename(fpath)}\n  {os.path.basename(mpath)}"
+                )
+
             print_metrics_console(self._last_metrics)
 
         except Exception as e:
