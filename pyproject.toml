@@ -7,7 +7,7 @@ name = "mindsai-filter-python"
 version = "1.1.0"
 description = "Minds AI physics-based signal filter package for real-time and offline EEG (Python)"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "MindsApplied" }]
 license = { text = "PolyForm-Noncommercial-1.0.0" }
 
@@ -42,3 +42,4 @@ Homepage = "https://github.com/MindsApplied/Minds_AI_EEG_Filter"
 [tool.setuptools.packages.find]
 include = ["mindsai_filter_python*"]
 exclude = ["examples*", "images*", "docs*", "tests*"]
+
