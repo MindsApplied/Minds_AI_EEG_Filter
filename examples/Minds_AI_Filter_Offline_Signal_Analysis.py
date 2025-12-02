@@ -27,13 +27,13 @@ import mindsai_filter_python as mai
 Minds AI Filter Offline testing app. Created by JM Wesierski
 
 Features:
-- Load EDF or CSV/TSV/TXT EEG data (up to ~30 minutes).
+- Load EDF/BDF or CSV/TSV/TXT EEG data (up to ~30 minutes).
 - Let the user select EEG channels by 1-based column indices and ranges
   (e.g. "1-21,23-26,28-31").
-- Apply MindsAI filter in repeated windows (1–60 s) across the full recording.
+- Apply MindsAI filter in repeated windows (1s, 4s, 30s, 60s) across the full recording.
 - Display only the first 2 minutes in the GUI for visualization.
 - Export:
-    * For EDF input: new EDF with all channels preserved but EEG channels replaced
+    * For EDF/BDF input: new EDF/BDF with all channels preserved but EEG channels replaced
       by filtered data.
     * For CSV/TSV/TXT input: CSV with all original columns and EEG columns overwritten
       by filtered data.
@@ -84,15 +84,20 @@ def read_numeric_csv(path: str):
 
     text = None
     if blob.startswith(b"\xff\xfe") or blob.startswith(b"\xfe\xff"):
-        try: text = blob.decode("utf-16")
-        except Exception: pass
+        try:
+            text = blob.decode("utf-16")
+        except Exception:
+            pass
     elif blob.startswith(b"\xef\xbb\xbf"):
-        try: text = blob.decode("utf-8-sig")
-        except Exception: pass
+        try:
+            text = blob.decode("utf-8-sig")
+        except Exception:
+            pass
     if text is None:
         for enc in ("utf-8", "utf-8-sig", "utf-16", "utf-16-le", "utf-16-be", "latin-1"):
             try:
-                text = blob.decode(enc); break
+                text = blob.decode(enc)
+                break
             except Exception:
                 continue
     if text is None:
@@ -202,7 +207,7 @@ def read_numeric_csv(path: str):
     return out, write_delim
 
 
-# ======================= EDF INTAKE (FULL, NO AUTO-DROP) =======================
+# ======================= EDF/BDF INTAKE (FULL, NO AUTO-DROP) =======================
 
 try:
     import pyedflib
@@ -213,11 +218,11 @@ except Exception:
 
 def read_edf_full(path: str):
     """
-    Read EDF and return a meta dict containing all channels, sampling rates,
+    Read EDF/BDF and return a meta dict containing all channels, sampling rates,
     signal arrays, and headers. No channels are dropped here.
     """
     if not _HAS_PYEDFLIB:
-        raise RuntimeError(human_err("EDF support requires 'pyEDFlib' (pip install pyEDFlib).", True))
+        raise RuntimeError(human_err("EDF/BDF support requires 'pyEDFlib' (pip install pyEDFlib).", True))
 
     import collections
 
@@ -231,7 +236,7 @@ def read_edf_full(path: str):
 
         valid_fs = [fs for fs in fs_ints if fs > 0]
         if not valid_fs:
-            raise ValueError(human_err("EDF contains no channels with positive sampling rate.", True))
+            raise ValueError(human_err("EDF/BDF contains no channels with positive sampling rate.", True))
         counter = collections.Counter(valid_fs)
         majority_fs, _ = counter.most_common(1)[0]
 
@@ -446,10 +451,10 @@ def save_filtered_edf_and_metrics(
     lam_str
 ):
     """
-    EDF export:
-    - edf_path: input EDF path
+    EDF/BDF export:
+    - edf_path: input EDF/BDF path
     - meta: dict from read_edf_full()
-    - eeg_indices: 0-based EDF channel indices selected as EEG
+    - eeg_indices: 0-based EDF/BDF channel indices selected as EEG
     - filt_cxt_volts: filtered EEG block in volts, shape (C x T), where row i corresponds
                       to eeg_indices[i]
     - unit_scale_in: input-unit → volts scale factor (e.g. 1e-6 for µV)
@@ -457,13 +462,22 @@ def save_filtered_edf_and_metrics(
     - lam_str: string like "1e-34" for filenames
     """
     if not _HAS_PYEDFLIB:
-        raise RuntimeError(human_err("EDF export requires 'pyEDFlib'.", True))
+        raise RuntimeError(human_err("EDF/BDF export requires 'pyEDFlib'.", True))
 
     ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%S")
     base_dir  = os.path.dirname(edf_path)
-    base_name = os.path.splitext(os.path.basename(edf_path))[0]
+    base_name, in_ext = os.path.splitext(os.path.basename(edf_path))
+    in_ext = in_ext.lower()
 
-    out_edf  = os.path.join(base_dir, f"{base_name}_mai_filtered_{lam_str}_{ts}.edf")
+    # Decide output extension and file_type based on input
+    if in_ext == ".bdf":
+        out_ext   = ".bdf"
+        file_type = pyedflib.FILETYPE_BDFPLUS
+    else:
+        out_ext   = ".edf"
+        file_type = pyedflib.FILETYPE_EDFPLUS
+
+    out_path = os.path.join(base_dir, f"{base_name}_mai_filtered_{lam_str}_{ts}{out_ext}")
     out_json = os.path.join(base_dir, f"{base_name}_mai_metrics_{lam_str}_{ts}.json")
 
     labels         = meta["labels"]
@@ -495,9 +509,9 @@ def save_filtered_edf_and_metrics(
         signals_out[ch_idx][:n_use] = filt_in_orig_unit[row_idx, :n_use]
 
     writer = pyedflib.EdfWriter(
-        out_edf,
+        out_path,
         n_ch,
-        file_type=pyedflib.FILETYPE_EDFPLUS
+        file_type=file_type
     )
 
     writer.setHeader(file_header)
@@ -508,7 +522,7 @@ def save_filtered_edf_and_metrics(
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=2)
 
-    return out_edf, out_json
+    return out_path, out_json
 
 
 # ======================= PLOTTING HELPERS =======================
@@ -563,8 +577,10 @@ class App(tk.Tk):
         self.console_font = tkfont.Font(family="Consolas", size=11)
 
         style = ttk.Style(self)
-        try: style.theme_use("clam")
-        except Exception: pass
+        try:
+            style.theme_use("clam")
+        except Exception:
+            pass
         style.configure("TLabel",   font=self.ui_font)
         style.configure("TButton",  font=self.ui_font_bold, padding=6)
         style.configure("TEntry",   padding=4)
@@ -605,7 +621,7 @@ class App(tk.Tk):
         # EDF-specific state
         self._edf_meta = None
         self._edf_is_input = False
-        self._edf_eeg_indices = None  # 0-based EDF channel indices used as EEG
+        self._edf_eeg_indices = None  # 0-based EDF/BDF channel indices used as EEG
 
         self._build_controls()
         self._build_console()
@@ -620,7 +636,7 @@ class App(tk.Tk):
         frm = tk.Frame(self, bg="black")
         frm.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
 
-        tk.Label(frm, text="EDF/CSV:", fg="white", bg="black", font=self.ui_font).grid(row=0, column=0, sticky="w")
+        tk.Label(frm, text="EDF/BDF/CSV:", fg="white", bg="black", font=self.ui_font).grid(row=0, column=0, sticky="w")
         tk.Entry(frm, textvariable=self.file_path, width=70, font=self.ui_font).grid(row=0, column=1, padx=5)
         ttk.Button(frm, text="Browse…", command=self.browse_file).grid(row=0, column=2, padx=5)
         ttk.Button(frm, text="Open folder", command=self.open_folder).grid(row=0, column=3, padx=5)
@@ -802,7 +818,7 @@ class App(tk.Tk):
             return
         try:
             ext = os.path.splitext(path)[1].lower()
-            if ext == ".edf":
+            if ext in (".edf", ".bdf"):
                 meta = read_edf_full(path)
                 self._edf_meta = meta
                 self._edf_is_input = True
@@ -812,7 +828,7 @@ class App(tk.Tk):
                     self.fs_entry.set(str(int(meta.get("majority_fs"))))
                 except Exception:
                     pass
-                delim = "<EDF>"
+                delim = "<EDF/BDF>"
             else:
                 arr, delim = read_numeric_csv(path)
                 self._last_raw_matrix = arr
@@ -831,7 +847,7 @@ class App(tk.Tk):
                     ",": ",",
                     ";": ";",
                     "|": "|"
-                }.get(delim, str(delim) if delim is not None else "<EDF>")
+                }.get(delim, str(delim) if delim is not None else "<EDF/BDF>")
                 self._console_write(
                     f"Detected total columns: {n_cols} (delimiter='{disp_delim}') — Are these all EEG?",
                     tag="info"
@@ -843,12 +859,15 @@ class App(tk.Tk):
 
     def browse_file(self):
         path = filedialog.askopenfilename(
-            title="Select EEG EDF/CSV",
+            title="Select EEG EDF/BDF/CSV",
             initialdir=os.path.join(APP_DIR, "data"),
             initialfile="eeg.edf",
-            filetypes=[("EDF / CSV / TSV / text", "*.edf *.csv *.tsv *.txt"),
-                       ("CSV / TSV / text", "*.csv *.tsv *.txt"),
-                       ("All files", "*.*")]
+            filetypes=[
+                ("EDF / BDF / CSV / TSV / text", "*.edf *.bdf *.csv *.tsv *.txt"),
+                ("EDF / BDF", "*.edf *.bdf"),
+                ("CSV / TSV / text", "*.csv *.tsv *.txt"),
+                ("All files", "*.*")
+            ]
         )
         if path:
             self.file_path.set(path)
@@ -991,24 +1010,24 @@ class App(tk.Tk):
         self._edf_eeg_indices = None
         self._edf_meta = None
 
-        if ext == ".edf":
-            # EDF path: keep all channels, filter only EEG subset at majority fs
+        if ext in (".edf", ".bdf"):
+            # EDF/BDF path: keep all channels, filter only EEG subset at majority fs
             meta = read_edf_full(path)
             self._edf_meta = meta
             self._edf_is_input = True
 
-            labels  = meta["labels"]
-            fs_list = meta["fs_list"]
-            sigs    = meta["signals_all"]
+            labels   = meta["labels"]
+            fs_list  = meta["fs_list"]
+            sigs     = meta["signals_all"]
             nsamples = meta["nsamples"]
-            maj_fs  = meta["majority_fs"]
+            maj_fs   = meta["majority_fs"]
 
             n_cols = len(labels)
             # Log channels that are NOT at the majority sampling rate
             for i, (lab, fsi) in enumerate(zip(labels, fs_list)):
                 if fsi != maj_fs:
                     self._console_write(
-                        f"[EDF] Channel {i+1} '{lab}' has fs={fsi} Hz (non-majority {maj_fs} Hz). "
+                        f"[EDF/BDF] Channel {i+1} '{lab}' has fs={fsi} Hz (non-majority {maj_fs} Hz). "
                         f"Consider excluding this channel in the EEG column selection.",
                         tag="info"
                     )
@@ -1019,7 +1038,7 @@ class App(tk.Tk):
                 pass
             fs = self._get_fs()
 
-            # User's selection refers to EDF channel indices (all channels)
+            # User's selection refers to EDF/BDF channel indices (all channels)
             idx_all = self._parse_column_selection(self.col_range_str.get(), n_cols)
 
             # Keep only selected channels that match majority fs
@@ -1028,7 +1047,7 @@ class App(tk.Tk):
                 fsi = fs_list[ch_idx]
                 if fsi != maj_fs:
                     self._console_write(
-                        f"[EDF] Skipping channel {ch_idx+1} '{labels[ch_idx]}' at fs={fsi} Hz "
+                        f"[EDF/BDF] Skipping channel {ch_idx+1} '{labels[ch_idx]}' at fs={fsi} Hz "
                         f"(non-majority {maj_fs} Hz) for MindsAI filtering.",
                         tag="info"
                     )
@@ -1044,7 +1063,7 @@ class App(tk.Tk):
             # Build C x T matrix from EEG channels
             T = min(nsamples[ch_idx] for ch_idx in eeg_indices)
             if T <= 0:
-                raise ValueError(human_err("EDF EEG channels appear to have zero length.", True))
+                raise ValueError(human_err("EDF/BDF EEG channels appear to have zero length.", True))
 
             cxt = np.stack(
                 [np.asarray(sigs[ch_idx][:T], dtype=float) for ch_idx in eeg_indices],
@@ -1066,7 +1085,7 @@ class App(tk.Tk):
         else:
             # CSV/TSV/TXT path: numeric matrix, then orientation detection
             if not (path.lower().endswith(".csv") or path.lower().endswith(".tsv") or path.lower().endswith(".txt")):
-                raise ValueError(human_err("Only .csv / .tsv / .txt / .edf files are accepted.", True))
+                raise ValueError(human_err("Only .csv / .tsv / .txt / .edf / .bdf files are accepted.", True))
             fs = self._get_fs()
             arr_raw, delim = read_numeric_csv(path)
             self._last_raw_matrix = arr_raw
@@ -1269,12 +1288,12 @@ class App(tk.Tk):
             path = self.file_path.get().strip()
             ext = os.path.splitext(path)[1].lower()
 
-            if ext == ".edf":
+            if ext in (".edf", ".bdf"):
                 if not self._edf_meta or self._edf_eeg_indices is None:
-                    raise RuntimeError("EDF metadata or EEG indices missing; cannot export EDF.")
+                    raise RuntimeError("EDF/BDF metadata or EEG indices missing; cannot export.")
                 # _filt_uV_cxt is in µV; convert to volts for export helper
                 filt_cxt_volts = self._filt_uV_cxt * 1e-6
-                out_edf, out_json = save_filtered_edf_and_metrics(
+                out_path, out_json = save_filtered_edf_and_metrics(
                     edf_path=path,
                     meta=self._edf_meta,
                     eeg_indices=self._edf_eeg_indices,
@@ -1284,7 +1303,7 @@ class App(tk.Tk):
                     lam_str=lam_str
                 )
                 self._set_status_ok(
-                    f"Exported EDF:\n  {os.path.basename(out_edf)}\n  {os.path.basename(out_json)}"
+                    f"Exported EDF/BDF:\n  {os.path.basename(out_path)}\n  {os.path.basename(out_json)}"
                 )
             else:
                 if self._last_raw_matrix is None or self._last_selected_indices is None:
