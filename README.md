@@ -12,8 +12,7 @@ Additional References:
 - [Live demo of the filter and below application](https://www.youtube.com/watch?v=YgEt1vKYDc4).
 - License: Polyform Noncommercial 1.0.0 — [Contact MindsApplied](https://www.minds-applied.com/contact) for commercial usage. See [LICENSE](LICENSE).
 - Patent status: **Patent pending** (US provisional filed 2025-06-30). See [PATENTS](PATENTS.md).
-- Cite this software: see [CITATION](CITATION.cff) and the preprint below.
-- Reconstructs flatlines based on surrounding neural activity 
+- Cite this software: see [CITATION](CITATION.cff) and the preprint below. 
 ---
 
 ## 1) Filter Package Installation
