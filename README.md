@@ -39,6 +39,7 @@ tailoring_lambda = 1e-25
 filtered_data = mai.mindsai_python_filter(data, tailoring_lambda)
 ```
 It's that easy! It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data window prior to any other filters or indiviudal electrode analysis. It can be applied to large trials (60 seconds maximum) or looped for real-time usage (1 second minimum). 
+> Public package versions restricted to python 3.10 & 3.11 due to .pyd export. Alternative versions can be made available upon request. 
 > An intialization key is no longer required. 
 
 <p align="center">
@@ -49,8 +50,9 @@ It's that easy! It expects `data` to be a 2-D continuous array of **channels x t
 
 The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI Filter modifies the original signal and should be input on a logarithmic scale between `0` and `0.1`. A lower `lambda` value like the default `1e-25` causes the filter to make bolder adjustments for more complex transformations that highlight the structure across `channels`, such as for real-time filtering (1 second windows). A higher `lambda` value like `1e-40` works best with more data (such as 60-second trials) for still helpful, but more conservative adjustments.
 
-## 2) Real-time and Offline Demo Apps - Windows Only (Not required for filter package usage)
+## 2) Real-time and Offline Demo Apps (Not required for filter package usage)
 We provide 2 apps that make it easy to test and see signal quality improvement from the Minds AI Filter. One for real-time streaming directly from your headset, and the other for feeding segments of prerecorded data. Both apps visualize the signal and removed noise, as well as provide SNR metrics for signal quality improvement.
+> Windows only - While we work to add alternative platforms for the demo apps, the filter package alone can be used anywhere that processes python.
 
 ### 2.1 Real-Time Streaming
 <p align="center">
