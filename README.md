@@ -27,7 +27,7 @@ pip install "mindsai-filter-python[examples] @ git+https://github.com/MindsAppli
 ```
 
 ### 1.1 Implementation
-After adding the package `mindsai_filter_python` from language/python_version to your project directory, it can be called using the following:
+After adding the package `mindsai_filter_python` from package/platform/python_version to your project directory, it can be called using the following:
 ```python
 import mindsai_filter_python as mai
 # data: (channels x timepoints) array
@@ -53,7 +53,7 @@ The hyperparameter integer, `tailoring_lambda`, controls how much your Minds AI 
 
 ## 2) Real-time and Offline Demo Apps (Not required for filter package usage)
 We provide 2 apps that make it easy to test and see signal quality improvement from the Minds AI Filter. One for real-time streaming directly from your headset, and the other for feeding segments of prerecorded data. Both apps visualize the signal and removed noise, as well as provide SNR metrics for signal quality improvement.
-> Windows only - While we work to add alternative platforms for the demo apps, the filter package alone can be used anywhere that processes python.
+> Windows only - While we work to add alternative platforms for the demo apps, the filter package alone can be used on Windows and Linux.
 
 ### 2.1 Real-Time Streaming
 <p align="center">
