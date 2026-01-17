@@ -27,7 +27,7 @@ pip install "mindsai-filter-python[examples] @ git+https://github.com/MindsAppli
 ```
 
 ### 1.1 Implementation
-After adding the package `mindsai_filter_python` from package/platform/python_version to your project directory, it can be called using the following:
+After adding the package `mindsai_filter_python` from **package/platform/python_version** to your project directory, it can be called using the following:
 ```python
 import mindsai_filter_python as mai
 # data: (channels x timepoints) array
@@ -39,7 +39,7 @@ tailoring_lambda = 1e-25
 filtered_data = mai.mindsai_python_filter(data, tailoring_lambda)
 ```
 It's that easy! It expects `data` to be a 2-D continuous array of **channels x time** and relies on one hyperparameter. It should be applied to the data window prior to any other filters or indiviudal electrode analysis. It can be applied to large trials (60 seconds maximum) or looped for real-time usage (1 second minimum). 
-> Public package versions restricted to python 3.10 & 3.11 due to .pyd export. Alternative versions can be made available upon request.
+> Public package versions restricted to python 3.10 & 3.11 due to export format. Alternative versions can be made available upon request.
 
 > An intialization key is no longer required. 
 
