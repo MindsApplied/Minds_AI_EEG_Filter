@@ -6,6 +6,7 @@ Specifically the MAI Filter:
 - Reduces high-frequency noise (>40 Hz) and sharpens low-frequency activity (~3-7Hz)
 - Smooths variance and reduces baseline-drift
 - Reconstructs flatlined electrodes from neighboring synchrony
+- Has less than .018s latency per window
 
 Additional References:
 - Preprint: https://doi.org/10.1101/2025.09.24.675953.
