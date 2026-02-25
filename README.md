@@ -28,7 +28,7 @@ pip install "mindsai-filter-python[examples] @ git+https://github.com/MindsAppli
 ```
 
 ### 1.1 Implementation
-After adding the package `mindsai_filter_python` from [minds-applied.com/minds-ai](https://www.minds-applied.com/minds-ai) to your project directory, it can be called using the following:
+After adding the package `mindsai_filter_python` from package/platform/python_version to your project directory, it can be called using the following:
 ```python
 import mindsai_filter_python as mai
 # data: (channels x timepoints) array
